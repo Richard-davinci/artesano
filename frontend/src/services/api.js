@@ -1,11 +1,29 @@
 export const apiUrl = (import.meta.env.VITE_API_URL?.trim() || 'http://localhost:3001').replace(/\/+$/, '');
 
-export async function obtenerPlatos(signal) {
-  const respuesta = await fetch(`${apiUrl}/api/dishes`, { signal });
-  if (!respuesta.ok) throw new Error('No se pudieron obtener los platos');
+export async function obtenerPlatos(signal, filtros = {}) {
+  const parametros = [];
+  if (filtros.name) parametros.push(`name=${encodeURIComponent(filtros.name)}`);
+  if (filtros.category) parametros.push(`category=${encodeURIComponent(filtros.category)}`);
+  if (filtros.minPrice) parametros.push(`minPrice=${encodeURIComponent(filtros.minPrice)}`);
+  if (filtros.maxPrice) parametros.push(`maxPrice=${encodeURIComponent(filtros.maxPrice)}`);
+  const consulta = parametros.length ? `?${parametros.join('&')}` : '';
+
+  const respuesta = await fetch(`${apiUrl}/api/dishes${consulta}`, { signal });
+  if (!respuesta.ok) {
+    const datos = await respuesta.json().catch(() => null);
+    throw new Error(datos?.message || 'No se pudieron obtener los platos.');
+  }
 
   const { data } = await respuesta.json();
   if (!Array.isArray(data)) throw new Error('La respuesta no contiene una lista de platos');
+  return data;
+}
+
+export async function obtenerCategorias(signal) {
+  const respuesta = await fetch(`${apiUrl}/api/categories`, { signal });
+  if (!respuesta.ok) throw new Error('No pudimos cargar las categorías.');
+
+  const { data } = await respuesta.json();
   return data;
 }
 
