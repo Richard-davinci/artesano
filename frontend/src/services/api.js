@@ -22,6 +22,19 @@ export async function iniciarSesion(email, password) {
   return respuesta.json();
 }
 
+// Envía los datos necesarios para crear una cuenta.
+export async function registrarUsuario(name, email, password) {
+  const respuesta = await fetch(`${apiUrl}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password })
+  });
+  const datos = await respuesta.json().catch(() => null);
+  if (!respuesta.ok) {
+    throw new Error(datos?.message || 'No se pudo completar el registro.');
+  }
+}
+
 // Envía el token en las solicitudes privadas.
 async function fetchPrivado(endpoint, token, options = {}) {
   const respuesta = await fetch(`${apiUrl}${endpoint}`, {
