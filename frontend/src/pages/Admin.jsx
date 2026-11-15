@@ -33,7 +33,9 @@ export default function Admin() {
         <h2 id="titulo-categorias">Categorías</h2>
         {cargando && <p role="status">Cargando categorías...</p>}
         {error && <p role="alert">{error}</p>}
-        {!cargando && !error && <ListaCategorias categorias={categorias} />}
+        {!cargando && !error && (
+          <ListaCategorias categorias={categorias} setCategorias={setCategorias} />
+        )}
       </section>
     </main>
   );

@@ -57,7 +57,7 @@ export async function registrarUsuario(name, email, password) {
 async function fetchPrivado(endpoint, token, options = {}) {
   const respuesta = await fetch(`${apiUrl}${endpoint}`, {
     ...options,
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { ...options.headers, Authorization: `Bearer ${token}` }
   });
   const datos = await respuesta.json().catch(() => null);
   if (!respuesta.ok) {
@@ -68,6 +68,14 @@ async function fetchPrivado(endpoint, token, options = {}) {
 
 export function obtenerPerfil(token) {
   return fetchPrivado('/api/auth/me', token);
+}
+
+export function crearCategoria(token, categoria) {
+  return fetchPrivado('/api/categories', token, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(categoria)
+  });
 }
 
 export function subirFotoPerfil(token, archivo) {
