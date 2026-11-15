@@ -90,6 +90,14 @@ export function borrarCategoria(token, id) {
   return fetchPrivado(`/api/categories/${id}`, token, { method: 'DELETE' });
 }
 
+export function crearPlato(token, plato) {
+  return fetchPrivado('/api/dishes', token, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(plato)
+  });
+}
+
 export function subirFotoPerfil(token, archivo) {
   const formData = new FormData();
   formData.append('profileImage', archivo);

@@ -64,7 +64,9 @@ export default function Admin() {
         <h2 id="titulo-platos">Platos</h2>
         {cargandoPlatos && <p role="status">Cargando platos...</p>}
         {errorPlatos && <p role="alert">{errorPlatos}</p>}
-        {!cargandoPlatos && !errorPlatos && <ListaPlatos platos={platos} />}
+        {!cargandoPlatos && !errorPlatos && (
+          <ListaPlatos platos={platos} setPlatos={setPlatos} categorias={categorias} />
+        )}
       </section>
     </main>
   );
