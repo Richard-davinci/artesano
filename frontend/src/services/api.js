@@ -86,6 +86,10 @@ export function editarCategoria(token, id, categoria) {
   });
 }
 
+export function borrarCategoria(token, id) {
+  return fetchPrivado(`/api/categories/${id}`, token, { method: 'DELETE' });
+}
+
 export function subirFotoPerfil(token, archivo) {
   const formData = new FormData();
   formData.append('profileImage', archivo);

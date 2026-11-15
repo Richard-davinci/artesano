@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { crearCategoria, editarCategoria } from '../services/api.js';
+import { borrarCategoria, crearCategoria, editarCategoria } from '../services/api.js';
 
 export default function ListaCategorias({ categorias, setCategorias }) {
   const { token } = useAuth();
@@ -8,8 +8,10 @@ export default function ListaCategorias({ categorias, setCategorias }) {
   const [descripcion, setDescripcion] = useState('');
   const [idEnEdicion, setIdEnEdicion] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [idBorrando, setIdBorrando] = useState(null);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const ocupado = guardando || idBorrando !== null;
 
   // Carga la categoría seleccionada en el formulario.
   function iniciarEdicion(categoria) {
@@ -66,6 +68,26 @@ export default function ListaCategorias({ categorias, setCategorias }) {
     }
   }
 
+  // Pide confirmación y quita la categoría tras el borrado.
+  async function eliminarCategoria(categoria) {
+    if (!window.confirm(`¿Borrar la categoría «${categoria.name}»?`)) return;
+
+    setError('');
+    setMensaje('');
+    setIdBorrando(categoria._id);
+
+    try {
+      await borrarCategoria(token, categoria._id);
+      setCategorias((actuales) => actuales.filter((actual) => actual._id !== categoria._id));
+      if (idEnEdicion === categoria._id) limpiarFormulario();
+      setMensaje('Categoría eliminada.');
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setIdBorrando(null);
+    }
+  }
+
   return (
     <>
       {categorias.length === 0 ? <p>Todavía no hay categorías.</p> : (
@@ -74,8 +96,11 @@ export default function ListaCategorias({ categorias, setCategorias }) {
             <li key={categoria._id}>
               <strong>{categoria.name}</strong>
               {categoria.description && <p>{categoria.description}</p>}
-              <button type="button" disabled={guardando} onClick={() => iniciarEdicion(categoria)}>
+              <button type="button" disabled={ocupado} onClick={() => iniciarEdicion(categoria)}>
                 Editar
+              </button>
+              <button type="button" disabled={ocupado} onClick={() => eliminarCategoria(categoria)}>
+                {idBorrando === categoria._id ? 'Borrando...' : 'Borrar'}
               </button>
             </li>
           ))}
@@ -83,7 +108,7 @@ export default function ListaCategorias({ categorias, setCategorias }) {
       )}
       <h3>{idEnEdicion ? 'Editar categoría' : 'Nueva categoría'}</h3>
       <form onSubmit={guardarCategoria}>
-        <fieldset disabled={guardando}>
+        <fieldset disabled={ocupado}>
           <p>
             <label htmlFor="nombre-categoria">Nombre</label>{' '}
             <input id="nombre-categoria" value={nombre}
