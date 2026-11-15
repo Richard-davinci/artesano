@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import PlatoCard from './PlatoCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { crearPlato } from '../services/api.js';
+import { borrarPlato, crearPlato, editarPlato } from '../services/api.js';
 
 const platoInicial = { name: '', description: '', price: '', category: '', available: true };
 
 export default function ListaPlatos({ platos, setPlatos, categorias }) {
   const { token } = useAuth();
   const [plato, setPlato] = useState(platoInicial);
+  const [idEnEdicion, setIdEnEdicion] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [idBorrando, setIdBorrando] = useState(null);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const ocupado = guardando || idBorrando !== null;
 
   // Actualiza el campo que se está editando.
   function handleChange(event) {
@@ -18,7 +21,29 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
     setPlato({ ...plato, [name]: type === 'checkbox' ? checked : value });
   }
 
-  // Guarda el plato y lo agrega al listado.
+  // Carga los datos del plato seleccionado.
+  function iniciarEdicion(seleccionado) {
+    setIdEnEdicion(seleccionado._id);
+    setPlato({
+      name: seleccionado.name,
+      description: seleccionado.description,
+      price: String(seleccionado.price),
+      category: seleccionado.category?._id ?? '',
+      available: Boolean(seleccionado.available)
+    });
+    setError('');
+    setMensaje('');
+  }
+
+  // Limpia el formulario y vuelve al alta.
+  function limpiarFormulario() {
+    setIdEnEdicion(null);
+    setPlato(platoInicial);
+    setError('');
+    setMensaje('');
+  }
+
+  // Guarda el plato y actualiza el listado.
   async function guardarPlato(event) {
     event.preventDefault();
     setError('');
@@ -34,16 +59,44 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
 
     setGuardando(true);
     try {
-      const creado = await crearPlato(token, {
+      const datos = {
         ...plato, name, description, price: Number(plato.price)
-      });
-      setPlatos((actuales) => [...actuales, { ...creado, category: categoria }]);
-      setPlato(platoInicial);
-      setMensaje('Plato creado.');
+      };
+      if (idEnEdicion) {
+        const actualizado = await editarPlato(token, idEnEdicion, datos);
+        setPlatos((actuales) => actuales.map((actual) =>
+          actual._id === idEnEdicion ? actualizado : actual
+        ));
+      } else {
+        const creado = await crearPlato(token, datos);
+        setPlatos((actuales) => [...actuales, { ...creado, category: categoria }]);
+      }
+      limpiarFormulario();
+      setMensaje(idEnEdicion ? 'Plato actualizado.' : 'Plato creado.');
     } catch (error) {
       setError(error.message);
     } finally {
       setGuardando(false);
+    }
+  }
+
+  // Confirma el borrado y quita el plato del listado.
+  async function eliminarPlato(seleccionado) {
+    if (!window.confirm(`¿Borrar el plato «${seleccionado.name}»?`)) return;
+
+    setError('');
+    setMensaje('');
+    setIdBorrando(seleccionado._id);
+
+    try {
+      await borrarPlato(token, seleccionado._id);
+      setPlatos((actuales) => actuales.filter((actual) => actual._id !== seleccionado._id));
+      if (idEnEdicion === seleccionado._id) limpiarFormulario();
+      setMensaje('Plato eliminado.');
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setIdBorrando(null);
     }
   }
 
@@ -60,13 +113,19 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
                 precio={plato.price}
               />
               <p>{plato.available ? 'Disponible' : 'No disponible'}</p>
+              <button type="button" disabled={ocupado} onClick={() => iniciarEdicion(plato)}>
+                Editar
+              </button>
+              <button type="button" disabled={ocupado} onClick={() => eliminarPlato(plato)}>
+                {idBorrando === plato._id ? 'Borrando...' : 'Borrar'}
+              </button>
             </li>
           ))}
         </ul>
       )}
-      <h3>Nuevo plato</h3>
+      <h3>{idEnEdicion ? 'Editar plato' : 'Nuevo plato'}</h3>
       <form onSubmit={guardarPlato}>
-        <fieldset disabled={guardando}>
+        <fieldset disabled={ocupado}>
           <p>
             <label htmlFor="nombre-nuevo-plato">Nombre</label>{' '}
             <input id="nombre-nuevo-plato" name="name" value={plato.name} onChange={handleChange} required />
@@ -98,8 +157,9 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
             </label>
           </p>
           <button type="submit" disabled={categorias.length === 0}>
-            {guardando ? 'Guardando...' : 'Crear plato'}
+            {guardando ? 'Guardando...' : idEnEdicion ? 'Guardar cambios' : 'Crear plato'}
           </button>
+          {idEnEdicion && <button type="button" onClick={limpiarFormulario}>Cancelar</button>}
         </fieldset>
       </form>
       {error && <p role="alert">{error}</p>}

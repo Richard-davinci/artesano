@@ -98,6 +98,18 @@ export function crearPlato(token, plato) {
   });
 }
 
+export function editarPlato(token, id, plato) {
+  return fetchPrivado(`/api/dishes/${id}`, token, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(plato)
+  });
+}
+
+export function borrarPlato(token, id) {
+  return fetchPrivado(`/api/dishes/${id}`, token, { method: 'DELETE' });
+}
+
 export function subirFotoPerfil(token, archivo) {
   const formData = new FormData();
   formData.append('profileImage', archivo);

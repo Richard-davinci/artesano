@@ -23,14 +23,40 @@ export default function Registro() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
-    if (usuario.password !== usuario.confirmPassword) {
+    const { name, email, password, confirmPassword } = usuario;
+    if (!name.trim()) {
+      setError('Ingresá tu nombre.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('Ingresá un email válido.');
+      return;
+    }
+    if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
+      return;
+    }
+    if ([...password].length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (new TextEncoder().encode(password).length > 72) {
+      setError('La contraseña es demasiado larga. Probá acortarla.');
+      return;
+    }
+
+    const caracteresPermitidos = /^[\p{L}\p{M}\x20-\x7E]+$/u;
+    const caracterEspecial = /[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]/;
+    if (!caracteresPermitidos.test(password) || /[\u20E3\uFE0E\uFE0F]/u.test(password) ||
+        !/\p{Ll}/u.test(password) || !/\p{Lu}/u.test(password) ||
+        !/[0-9]/.test(password) || !caracterEspecial.test(password)) {
+      setError('Incluí al menos una minúscula, una mayúscula, un número y un carácter especial.');
       return;
     }
 
     setEnviando(true);
     try {
-      await registrarUsuario(usuario.name, usuario.email, usuario.password);
+      await registrarUsuario(name.trim(), email.trim(), password);
       navigate('/login');
     } catch (error) {
       setError(error.message);
