@@ -78,6 +78,14 @@ export function crearCategoria(token, categoria) {
   });
 }
 
+export function editarCategoria(token, id, categoria) {
+  return fetchPrivado(`/api/categories/${id}`, token, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(categoria)
+  });
+}
+
 export function subirFotoPerfil(token, archivo) {
   const formData = new FormData();
   formData.append('profileImage', archivo);
