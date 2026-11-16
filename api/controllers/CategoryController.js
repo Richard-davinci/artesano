@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
+import { randomUUID } from 'node:crypto';
 import Category, { categoryNameCollation } from '../models/Category.js';
 import Dish from '../models/Dish.js';
+import { profileImageExtension } from '../middlewares/profileImageUpload.js';
 
 // Quita espacios externos y deja solo la inicial en mayúscula.
 function formatCategoryName(name) {
@@ -18,6 +20,52 @@ const duplicateName = (res) => res.status(409).json({
 const isDuplicateName = (error) => error.code === 11000 && error.keyPattern?.name === 1;
 
 class CategoryController {
+  // Sirve la imagen guardada para la categoría.
+  async getImage(req, res, next) {
+    const { id } = req.params;
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      return res.status(400).json({ message: 'El ID de la categoría no es válido' });
+    }
+
+    try {
+      const categoria = await Category.findById(id).select('imageFile');
+      if (!categoria?.imageFile?.bytes) {
+        return res.status(404).json({ message: 'Imagen no encontrada' });
+      }
+      res.set('X-Content-Type-Options', 'nosniff');
+      res.set('Cache-Control', 'no-cache');
+      return res.type(categoria.imageFile.mime).send(categoria.imageFile.bytes);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  // Guarda o reemplaza la imagen en MongoDB.
+  async uploadImage(req, res, next) {
+    const { id } = req.params;
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      return res.status(400).json({ message: 'El ID de la categoría no es válido' });
+    }
+    const extension = req.file && profileImageExtension(req.file.buffer);
+    if (!extension) {
+      return res.status(400).json({ message: 'Elegí una imagen JPEG, PNG o WebP' });
+    }
+
+    const mime = extension === 'jpg' ? 'image/jpeg' : `image/${extension}`;
+    const image = `/api/categories/${id}/image?v=${randomUUID()}`;
+    try {
+      const resultado = await Category.updateOne({ _id: id }, {
+        $set: { image, imageFile: { bytes: req.file.buffer, mime } }
+      });
+      if (!resultado.matchedCount) {
+        return res.status(404).json({ message: 'Categoría no encontrada' });
+      }
+      return res.json({ message: 'Foto de la categoría actualizada', data: { image } });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   // Lista todas las categorías.
   async getAll(req, res) {
     try {

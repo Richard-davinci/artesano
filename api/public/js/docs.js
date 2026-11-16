@@ -113,6 +113,13 @@ document.querySelectorAll('table tbody tr').forEach((row) => {
     instructions.textContent = 'Enviá multipart/form-data con un archivo en el campo profileImage. Agregá Authorization: Bearer TU_TOKEN. Esperado: 200 con la ruta en data.profileImage.';
   } else if (path === '/api/auth/me') {
     instructions.textContent = 'Agregá Authorization: Bearer TU_TOKEN. Esperado: 200 con el perfil; sin token válido: 401.';
+  } else if (method === 'POST' && path.endsWith('/:id/image')) {
+    const limite = isCategory ? '4 MiB' : '2 MiB';
+    instructions.textContent =
+      'Reemplazá :id por el ID del recurso. En Body → Multipart agregá un archivo JPEG, PNG o WebP en el campo image. '
+      + `El límite es ${limite}. Usá Authorization: Bearer TU_TOKEN de administrador. `
+      + 'Esperado: 200 con la URL en data.image. Abrí esa URL para ver la foto. '
+      + 'Sin token válido: 401. Con usuario común: 403. Archivo inválido: 400. Recurso inexistente: 404. Archivo demasiado grande: 413.';
   } else if (method === 'POST' && isCategory) {
     instructions.textContent =
       'Seleccioná POST y Body → JSON. Probá sin token: 401; '

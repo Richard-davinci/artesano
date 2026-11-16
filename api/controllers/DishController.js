@@ -1,9 +1,50 @@
 import mongoose from 'mongoose';
+import { randomUUID } from 'node:crypto';
+import { mkdir, unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import Dish from '../models/Dish.js';
 import Category from '../models/Category.js';
+import { dishImageDir } from '../middlewares/dishImageUpload.js';
+import { profileImageExtension } from '../middlewares/profileImageUpload.js';
+
+// Borra una imagen guardada en la carpeta de platos.
+async function borrarImagen(ruta) {
+  const archivo = ruta?.match(/^\/uploads\/dishes\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/i)?.[1];
+  if (archivo) await unlink(join(dishImageDir, archivo)).catch(() => {});
+}
 
 //clase  platos cpntroller
 class DishController {
+  // Guarda la nueva foto y retira la anterior.
+  async uploadImage(req, res, next) {
+    const { id } = req.params;
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      return res.status(400).json({ message: 'El ID del plato no es válido' });
+    }
+    const extension = req.file && profileImageExtension(req.file.buffer);
+    if (!extension) {
+      return res.status(400).json({ message: 'Elegí una imagen JPEG, PNG o WebP' });
+    }
+
+    const nombre = `${randomUUID()}.${extension}`;
+    const image = `/uploads/dishes/${nombre}`;
+    let anterior;
+    try {
+      await mkdir(dishImageDir, { recursive: true });
+      await writeFile(join(dishImageDir, nombre), req.file.buffer);
+      anterior = await Dish.findByIdAndUpdate(id, { image }, { new: false }).select('image');
+    } catch (error) {
+      await borrarImagen(image);
+      return next(error);
+    }
+    if (!anterior) {
+      await borrarImagen(image);
+      return res.status(404).json({ message: 'Plato no encontrado' });
+    }
+
+    await borrarImagen(anterior.image);
+    return res.json({ message: 'Foto del plato actualizada', data: { image } });
+  }
 
   async getAll(req, res) {
     try {
@@ -361,6 +402,8 @@ class DishController {
           message: 'Plato no encontrado'
         });
       }
+
+      await borrarImagen(dish.image);
 
       return res.status(200).json({
         message: 'Plato eliminado correctamente',

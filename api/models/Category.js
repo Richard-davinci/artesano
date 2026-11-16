@@ -15,6 +15,11 @@ const categorySchema = new mongoose.Schema({
     trim: true,
     maxlength: 300,
     default: ''
+  },
+  image: { type: String, default: null },
+  imageFile: {
+    type: new mongoose.Schema({ bytes: Buffer, mime: String }, { _id: false }),
+    select: false
   }
 }, { autoIndex: false });
 

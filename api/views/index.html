@@ -151,6 +151,12 @@
                   Requiere JWT de administrador. Sin token válido devuelve 401; con usuario común, 403.
                 </td>
               </tr>
+
+              <tr>
+                <td><span class="method method-post">POST</span></td>
+                <td><code>/api/dishes/:id/image</code></td>
+                <td>Sube o reemplaza la foto de un plato. Requiere JWT de administrador. Acepta JPEG, PNG o WebP de hasta 2 MiB. La URL pública de la foto se devuelve en <code>data.image</code>.</td>
+              </tr>
               
               <tr>
                 <td><span class="method method-put">PUT</span></td>
@@ -200,6 +206,12 @@
                 </td>
                 <td>Obtiene una categoría por ID. El ejemplo consulta Pastas.</td>
               </tr>
+
+              <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/categories/:id/image</code></td>
+                <td>Devuelve públicamente el archivo de imagen de la categoría. Si la categoría no tiene foto, devuelve 404.</td>
+              </tr>
               
               <tr>
                 <td><span class="method method-post">POST</span></td>
@@ -207,6 +219,12 @@
                   <code>http://localhost:3001/api/categories</code>
                 </td>
                 <td>Requiere JWT de administrador. Sin token válido devuelve 401; con usuario común, 403. Si se crea, devuelve 201; si el nombre ya existe, 409.</td>
+              </tr>
+
+              <tr>
+                <td><span class="method method-post">POST</span></td>
+                <td><code>/api/categories/:id/image</code></td>
+                <td>Guarda o reemplaza la foto de una categoría en MongoDB. Requiere JWT de administrador. Acepta JPEG, PNG o WebP de hasta 4 MiB y devuelve su URL en <code>data.image</code>.</td>
               </tr>
               
               <tr>

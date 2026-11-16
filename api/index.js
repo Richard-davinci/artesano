@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { connectDB } from './config/db.js';
 import routerAPI from './routes/index.js';
 import { profileImageDir } from './middlewares/profileImageUpload.js';
+import { dishImageDir } from './middlewares/dishImageUpload.js';
 import {
   notFound,
   errorHandler
@@ -27,6 +28,9 @@ const publicPath = fileURLToPath(
 
 app.use(express.static(publicPath));
 app.use('/uploads/profiles', express.static(profileImageDir, {
+  setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff')
+}));
+app.use('/uploads/dishes', express.static(dishImageDir, {
   setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff')
 }));
 

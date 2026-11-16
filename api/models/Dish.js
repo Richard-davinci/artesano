@@ -24,6 +24,7 @@ const dishSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  image: { type: String, default: null },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'category',
