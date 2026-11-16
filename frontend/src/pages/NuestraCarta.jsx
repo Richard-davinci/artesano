@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
 import PlatoCard from '../components/PlatoCard.jsx';
-import { obtenerCategorias, obtenerPlatos } from '../services/api.js';
+import { apiUrl, obtenerCategorias, obtenerPlatos } from '../services/api.js';
 
 const filtrosIniciales = { name: '', category: '', minPrice: '', maxPrice: '' };
-
-export default function Menu() {
+// Carta pública con filtros de búsqueda.
+export default function NuestraCarta() {
   const [platos, setPlatos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [categorias, setCategorias] = useState([]);
   const [errorCategorias, setErrorCategorias] = useState('');
+  // Separa lo que se escribe de los filtros aplicados.
   const [campos, setCampos] = useState(filtrosIniciales);
   const [filtros, setFiltros] = useState(filtrosIniciales);
 
   useEffect(() => {
     const controller = new AbortController();
 
+    // Carga las opciones del desplegable.
     async function cargarCategorias() {
       try {
         const resultado = await obtenerCategorias(controller.signal);
@@ -32,6 +34,7 @@ export default function Menu() {
   useEffect(() => {
     const controller = new AbortController();
 
+    // Consulta los platos cuando se aplican los filtros.
     async function cargarPlatos() {
       try {
         setCargando(true);
@@ -68,15 +71,17 @@ export default function Menu() {
   }
 
   return (
-    <main className="menu">
+    <main className="container carta-publica">
       <header>
-        <p className="marca">Bodegón Arte-Sano</p>
-        <h1>Menú</h1>
+        <p className="marca">Explorá nuestra carta</p>
+        <h1>La carta de la casa<span>.</span></h1>
+        <p className="intro-carta">Sin vueltas. Buenos ingredientes y mucho sabor.</p>
       </header>
-      <form aria-label="Filtros del menú" onSubmit={aplicarFiltros}>
+      <form className="filtros-carta" aria-label="Filtros del menú" onSubmit={aplicarFiltros}>
         <p>
           <label htmlFor="buscar-plato">Nombre del plato</label>{' '}
-          <input id="buscar-plato" type="search" name="name" value={campos.name} onChange={handleChange} />
+          <input id="buscar-plato" type="search" name="name" placeholder="¿Qué tenés ganas de comer?"
+            value={campos.name} onChange={handleChange} />
         </p>
         <p>
           <label htmlFor="categoria-plato">Categoría</label>{' '}
@@ -87,7 +92,6 @@ export default function Menu() {
             ))}
           </select>
         </p>
-        {errorCategorias && <p role="alert">{errorCategorias}</p>}
         <p>
           <label htmlFor="precio-minimo">Precio mínimo</label>{' '}
           <input id="precio-minimo" type="number" min="0" step="any" name="minPrice"
@@ -98,12 +102,20 @@ export default function Menu() {
           <input id="precio-maximo" type="number" min="0" step="any" name="maxPrice"
             value={campos.maxPrice} onChange={handleChange} />
         </p>
-        <button type="submit">Aplicar filtros</button>{' '}
-        <button type="button" onClick={limpiarFiltros}>Limpiar filtros</button>
+        <div className="acciones-filtros-carta">
+          <button type="submit">Aplicar filtros</button>
+          <button type="button" onClick={limpiarFiltros}>Limpiar filtros</button>
+        </div>
+        {errorCategorias && <p className="aviso-carta" role="alert">{errorCategorias}</p>}
       </form>
       {cargando && <p role="status">Cargando menú...</p>}
       {error && <p role="alert">{error}</p>}
-      {!cargando && !error && platos.length === 0 && <p>No se encontraron platos.</p>}
+      {!cargando && !error && (
+        <p className="total-carta" role="status">
+          {platos.length === 0 ? 'No se encontraron platos.' : (platos.length === 1 ? '1 plato para disfrutar' : `${platos.length} platos para disfrutar`)}
+        </p>
+      )}
+      {/* Tarjetas de los platos encontrados. */}
       <div className="lista-platos">
         {!cargando && !error && platos.map((plato) => (
           <PlatoCard
@@ -112,6 +124,8 @@ export default function Menu() {
             descripcion={plato.description}
             categoria={plato.category?.name ?? 'Sin categoría'}
             precio={plato.price}
+            foto={plato.image ? `${apiUrl}${plato.image}` : null}
+            fotoCategoria={plato.category?.image ? `${apiUrl}${plato.category.image}` : null}
           />
         ))}
       </div>

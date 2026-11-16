@@ -1,0 +1,181 @@
+.carta-publica {
+    padding-block: clamp(2rem, 3vw, 3.25rem) clamp(3rem, 6vw, 6rem);
+    color: #292522;
+}
+
+.carta-publica header .marca {
+    margin: 0 0 1rem;
+    color: #a94020;
+    font-size: .72rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+}
+
+.carta-publica h1 {
+    margin: 0;
+    font: 800 clamp(2.25rem, 5vw, 3rem)/1.2 system-ui, sans-serif;
+    letter-spacing: -.055em;
+}
+
+.carta-publica h1 span {
+    color: #ed6d41;
+}
+
+.intro-carta {
+    color: #565656;
+    line-height: 1.6;
+}
+
+/* Formulario de búsqueda y filtros. */
+.filtros-carta {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-block: 2rem 1.25rem;
+}
+
+.filtros-carta p {
+    margin: 0;
+}
+
+.filtros-carta label {
+    display: block;
+    margin-bottom: .4rem;
+    font-size: .875rem;
+    font-weight: 600;
+}
+
+.filtros-carta :is(input, select, button) {
+    box-sizing: border-box;
+    min-height: 2.75rem;
+    border: 1px solid #b9ada6;
+    border-radius: .5rem;
+    background: #fffdf8;
+    color: inherit;
+    padding: .6rem .85rem;
+    font: inherit;
+}
+
+.filtros-carta :is(input, select) {
+    width: 100%;
+}
+
+.filtros-carta :is(input, select, button):focus-visible {
+    outline: 2px solid #a94020;
+    outline-offset: 3px;
+}
+
+.acciones-filtros-carta, .filtros-carta .aviso-carta {
+    grid-column: 1 / -1;
+}
+
+.acciones-filtros-carta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+}
+
+.filtros-carta button {
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.filtros-carta button[type="submit"] {
+    background: #ed6d41;
+    border-color: transparent;
+}
+
+.filtros-carta button:hover {
+    border-color: #a94020;
+}
+
+.total-carta {
+    border-top: 1px solid #d8cbc2;
+    padding-top: 1rem;
+    color: #565656;
+    font-size: .875rem;
+}
+
+.carta-publica .lista-platos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.carta-publica .plato {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 1.25rem;
+    background: #fffdf8;
+    overflow-wrap: anywhere;
+}
+
+.carta-publica .plato h2 {
+    font-size: 1.1rem;
+}
+
+.carta-publica .plato .categoria {
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.carta-publica .plato .descripcion {
+    color: #565656;
+    font-size: .925rem;
+}
+
+.carta-publica .plato .precio {
+    margin-top: auto;
+    padding-top: .85rem;
+    border-top: 1px solid #e2d7d0;
+}
+
+.carta-publica .contenido-plato {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 1.4rem;
+}
+
+/* Imagen y aviso cuando falta la foto del plato. */
+.foto-carta {
+    position: relative;
+    aspect-ratio: 1.45;
+    overflow: hidden;
+}
+
+.foto-carta img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.foto-carta span {
+    position: absolute;
+    inset: auto 0 0;
+    padding: .45rem .75rem;
+    background: #000c;
+    color: #fff;
+    text-align: center;
+    font-size: .8rem;
+}
+
+/* Grilla adaptable al ancho de pantalla. */
+@media (max-width: 800px) {
+    .filtros-carta, .carta-publica .lista-platos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .carta-publica .lista-platos {
+        grid-template-columns: 1fr;
+    }
+
+    .filtros-carta > :first-child, .filtros-carta > :nth-child(2) {
+        grid-column: 1 / -1;
+    }
+}

@@ -1,0 +1,241 @@
+/* Colores compartidos del header y el footer. */
+.header, .footer {
+    background: #292522;
+    color: #faf2ed;
+}
+
+.header {
+    border-bottom: 1px solid #51453f;
+}
+
+.header-bar {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    gap: clamp(.75rem, 2vw, 1.5rem);
+}
+
+.logo {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -.075em;
+    white-space: nowrap;
+}
+
+.nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem;
+}
+
+/* Nav del header. */
+.nav-header {
+    display: flex;
+    align-items: center;
+    gap: clamp(.75rem, 2vw, 1.5rem);
+    margin-left: auto;
+}
+
+.menu-toggle {
+    display: none;
+}
+
+.nav a {
+    padding: .55rem 1rem;
+    border-radius: .5rem;
+    font-size: .875rem;
+}
+
+.cuenta-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .4rem;
+    font-size: .875rem;
+    font-weight: 700;
+}
+
+.cuenta-nav a {
+    padding: .55rem .75rem;
+    border-radius: .55rem;
+    white-space: nowrap;
+}
+
+.logo-header, .logo-footer {
+    display: block;
+    flex: none;
+    width: clamp(9rem, 16vw, 12rem);
+}
+
+.logo-header img, .logo-footer img {
+    width: 100%;
+    height: auto;
+}
+
+.header nav a {
+    font-weight: 700;
+}
+
+.header nav a.active, .header .cuenta-nav a.active {
+    background: #493a32;
+    color: #ffd8c6;
+}
+
+.header nav a:focus-visible, .header .logo:focus-visible {
+    outline: 2px solid #ffd8c6;
+    outline-offset: 3px;
+}
+
+.header .cuenta-nav {
+    border-left: 1px solid #61544d;
+    padding-left: clamp(.75rem, 2vw, 1.5rem);
+}
+
+.header .cuenta-nav .button-accent {
+    background: transparent;
+    border: 1px solid #a77965;
+    color: inherit;
+}
+
+.header .cuenta-nav .button-accent.active {
+    background: #493a32;
+    color: #ffd8c6;
+}
+
+.footer {
+    border-top: 1px solid #51453f;
+    padding-block: 2.75rem;
+}
+
+.footer .nav a.active {
+    background: #493a32;
+    color: #ffd8c6;
+}
+
+.footer a:focus-visible {
+    outline: 2px solid #ffd8c6;
+    outline-offset: 3px;
+}
+
+/* Distribución del footer y los créditos. */
+.footer-principal, .footer-legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+.footer-principal .nav {
+    margin-inline: auto;
+}
+
+.footer-legal {
+    margin-top: 1.6rem;
+    padding-top: 1.5rem;
+    justify-content: space-between;
+    border-top: 1px solid #61544d;
+    color: #e1d4cc;
+    font-size: .7rem;
+}
+
+.footer-creditos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem 1.35rem;
+    margin: 0;
+}
+
+.footer-creditos dt {
+    font-weight: 800;
+}
+
+.footer-creditos dd {
+    margin: .2rem 0 0;
+}
+
+/* Menú desplegable en pantallas chicas. */
+@media (max-width: 960px) {
+    .header-bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .5rem;
+        padding-block: .55rem;
+    }
+
+    .menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        min-height: 2.75rem;
+        padding: .5rem .85rem;
+        border: 1px solid #a77965;
+        border-radius: .55rem;
+        background: transparent;
+        color: inherit;
+        font-weight: 700;
+    }
+
+    .menu-toggle:focus-visible {
+        outline: 2px solid #ffd8c6;
+        outline-offset: 3px;
+    }
+
+    .nav-header {
+        display: none;
+        grid-column: 1 / -1;
+        margin: 0;
+    }
+
+    .nav-header.is-open {
+        display: grid;
+        gap: .75rem;
+        padding-bottom: .35rem;
+    }
+
+    .nav-header nav {
+        display: grid;
+        gap: .3rem;
+    }
+
+    .nav-header nav a {
+        min-height: 2.75rem;
+        display: flex;
+        align-items: center;
+        padding: .5rem .85rem;
+    }
+
+    .header .cuenta-nav {
+        border-left: 0;
+        border-top: 1px solid #61544d;
+        padding: .65rem 0 0;
+    }
+}
+
+:is(.header, .footer) a {
+    color: inherit;
+    text-decoration: none;
+}
+
+:is(.header, .footer) a:hover {
+    text-decoration: underline;
+}
+
+.logo img {
+    display: block;
+}
+
+.menu-toggle {
+    font: inherit;
+    cursor: pointer;
+}
+
+@media (max-width: 520px) {
+    .container {
+        width: calc(100% - 2rem);
+    }
+
+    .footer-principal .nav {
+        margin: 0;
+    }
+}
