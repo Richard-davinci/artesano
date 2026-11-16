@@ -1,10 +1,5 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
-import { profileImageDir, profileImageExtension } from '../middlewares/profileImageUpload.js';
+import { profileImageExtension } from '../middlewares/profileImageUpload.js';
+import { buscarPerfil, guardarFotoPerfil, iniciarSesion, registrarUsuario } from '../services/AuthService.js';
 
 class AuthController {
   // Registra un usuario.
@@ -53,17 +48,10 @@ class AuthController {
         });
       }
 
-      const existingUser = await User.findOne({ email: normalizedEmail });
-      if (existingUser) {
+      const user = await registrarUsuario({ name, email: normalizedEmail, password });
+      if (!user) {
         return res.status(409).json({ message: 'El email ya está registrado' });
       }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await User.create({
-        name: name.trim(),
-        email: normalizedEmail,
-        password: hashedPassword
-      });
 
       return res.status(201).json({
         message: 'Usuario registrado',
@@ -77,7 +65,7 @@ class AuthController {
   // Devuelve el perfil del usuario autenticado.
   async getMe(req, res, next) {
     try {
-      const user = await User.findById(req.user._id).select('name email profileImage');
+      const user = await buscarPerfil(req.user._id);
       if (!user) {
         return res.status(404).json({ message: 'Usuario no encontrado' });
       }
@@ -103,32 +91,14 @@ class AuthController {
         return res.status(400).json({ message: 'Usá una imagen JPEG, PNG o WebP' });
       }
 
-      const filename = `${randomUUID()}.${extension}`;
-      const path = join(profileImageDir, filename);
-      const profileImage = `/uploads/profiles/${filename}`;
-      await mkdir(profileImageDir, { recursive: true });
-      await writeFile(path, req.file.buffer, { flag: 'wx' });
-
-      let user;
-      try {
-        user = await User.findByIdAndUpdate(
-          req.user._id, { profileImage }, { new: false }
-        ).select('name email profileImage');
-      } catch (error) {
-        await unlink(path).catch(() => {});
-        throw error;
-      }
-      if (!user) {
-        await unlink(path);
+      const perfil = await guardarFotoPerfil(req.user._id, req.file.buffer, extension);
+      if (!perfil) {
         return res.status(404).json({ message: 'Usuario no encontrado' });
       }
 
-      const previous = user.profileImage?.match(/^\/uploads\/profiles\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/i);
-      if (previous) await unlink(join(profileImageDir, previous[1])).catch(() => {});
-
       return res.status(200).json({
         message: 'Foto de perfil actualizada',
-        data: { _id: user._id, name: user.name, email: user.email, profileImage }
+        data: perfil
       });
     } catch (error) {
       return next(error);
@@ -146,21 +116,8 @@ class AuthController {
         return res.status(400).json({ message: 'Ingresá un email y una contraseña válidos' });
       }
 
-      const user = await User.findOne({ email: normalizedEmail });
-      if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: 'Credenciales inválidas' });
-      }
-
-      const secret = process.env.SECRET_KEY;
-      if (!secret?.trim()) {
-        return next(new Error('Falta configurar SECRET_KEY'));
-      }
-
-      const token = jwt.sign(
-        { _id: user._id, name: user.name, role: user.role ?? 'user' },
-        secret,
-        { expiresIn: '1h' }
-      );
+      const token = await iniciarSesion(normalizedEmail, password);
+      if (!token) return res.status(401).json({ message: 'Credenciales inválidas' });
 
       return res.status(200).json({ message: 'Sesión iniciada', token });
     } catch (error) {

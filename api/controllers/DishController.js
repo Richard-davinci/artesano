@@ -1,19 +1,9 @@
 import mongoose from 'mongoose';
-import { randomUUID } from 'node:crypto';
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import Dish from '../models/Dish.js';
-import Category from '../models/Category.js';
-import { dishImageDir } from '../middlewares/dishImageUpload.js';
 import { profileImageExtension } from '../middlewares/profileImageUpload.js';
+import {
+  buscarPlato, crearPlato, editarPlato, eliminarPlato, guardarFotoPlato, listarPlatos
+} from '../services/DishService.js';
 
-// Borra una imagen guardada en la carpeta de platos.
-async function borrarImagen(ruta) {
-  const archivo = ruta?.match(/^\/uploads\/dishes\/([0-9a-f-]{36}\.(?:jpg|png|webp))$/i)?.[1];
-  if (archivo) await unlink(join(dishImageDir, archivo)).catch(() => {});
-}
-
-//clase  platos cpntroller
 class DishController {
   // Guarda la nueva foto y retira la anterior.
   async uploadImage(req, res, next) {
@@ -26,24 +16,13 @@ class DishController {
       return res.status(400).json({ message: 'Elegí una imagen JPEG, PNG o WebP' });
     }
 
-    const nombre = `${randomUUID()}.${extension}`;
-    const image = `/uploads/dishes/${nombre}`;
-    let anterior;
     try {
-      await mkdir(dishImageDir, { recursive: true });
-      await writeFile(join(dishImageDir, nombre), req.file.buffer);
-      anterior = await Dish.findByIdAndUpdate(id, { image }, { new: false }).select('image');
+      const image = await guardarFotoPlato(id, req.file.buffer, extension);
+      if (!image) return res.status(404).json({ message: 'Plato no encontrado' });
+      return res.json({ message: 'Foto del plato actualizada', data: { image } });
     } catch (error) {
-      await borrarImagen(image);
       return next(error);
     }
-    if (!anterior) {
-      await borrarImagen(image);
-      return res.status(404).json({ message: 'Plato no encontrado' });
-    }
-
-    await borrarImagen(anterior.image);
-    return res.json({ message: 'Foto del plato actualizada', data: { image } });
   }
 
   async getAll(req, res) {
@@ -132,9 +111,7 @@ class DishController {
         });
       }
 
-      const dishes = await Dish
-        .find(filter)
-        .populate('category');
+      const dishes = await listarPlatos(filter);
 
       return res.status(200).json({
         message: 'success',
@@ -212,21 +189,19 @@ class DishController {
         });
       }
 
-      const categoryExists = await Category.findById(category);
-
-      if (!categoryExists) {
-        return res.status(404).json({
-          message: 'La categoría no existe'
-        });
-      }
-
-      const dish = await Dish.create({
+      const { dish, categoriaInexistente } = await crearPlato({
         name,
         description,
         price,
         available,
         category
       });
+
+      if (categoriaInexistente) {
+        return res.status(404).json({
+          message: 'La categoría no existe'
+        });
+      }
 
       return res.status(201).json({
         message: 'success',
@@ -257,7 +232,7 @@ class DishController {
         });
       }
 
-      const dish = await Dish.findById(id).populate('category');
+      const dish = await buscarPlato(id);
 
       if (!dish) {
         return res.status(404).json({
@@ -346,19 +321,13 @@ class DishController {
         });
       }
 
-      const categoryExists = await Category.findById(category);
+      const { dish, categoriaInexistente } = await editarPlato(id, { name, description, price, available, category });
 
-      if (!categoryExists) {
+      if (categoriaInexistente) {
         return res.status(404).json({
           message: 'La categoría no existe'
         });
       }
-
-      const dish = await Dish.findByIdAndUpdate(
-        id,
-        { name, description, price, available, category },
-        { new: true, runValidators: true }
-      ).populate('category');
 
       if (!dish) {
         return res.status(404).json({
@@ -395,15 +364,13 @@ class DishController {
         });
       }
 
-      const dish = await Dish.findByIdAndDelete(id);
+      const dish = await eliminarPlato(id);
 
       if (!dish) {
         return res.status(404).json({
           message: 'Plato no encontrado'
         });
       }
-
-      await borrarImagen(dish.image);
 
       return res.status(200).json({
         message: 'Plato eliminado correctamente',

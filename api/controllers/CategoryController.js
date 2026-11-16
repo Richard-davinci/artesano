@@ -1,15 +1,9 @@
 import mongoose from 'mongoose';
-import { randomUUID } from 'node:crypto';
-import Category, { categoryNameCollation } from '../models/Category.js';
-import Dish from '../models/Dish.js';
 import { profileImageExtension } from '../middlewares/profileImageUpload.js';
-
-// Quita espacios externos y deja solo la inicial en mayúscula.
-function formatCategoryName(name) {
-  const trimmedName = name.trim().toLocaleLowerCase('es');
-  const [first, ...rest] = trimmedName;
-  return first.toLocaleUpperCase('es') + rest.join('');
-}
+import {
+  buscarCategoria, buscarFotoCategoria, crearCategoria, editarCategoria,
+  eliminarCategoria, guardarFotoCategoria, listarCategorias
+} from '../services/CategoryService.js';
 
 // Devuelve 409 cuando el nombre ya pertenece a otra categoría.
 const duplicateName = (res) => res.status(409).json({
@@ -28,13 +22,13 @@ class CategoryController {
     }
 
     try {
-      const categoria = await Category.findById(id).select('imageFile');
-      if (!categoria?.imageFile?.bytes) {
+      const imageFile = await buscarFotoCategoria(id);
+      if (!imageFile?.bytes) {
         return res.status(404).json({ message: 'Imagen no encontrada' });
       }
       res.set('X-Content-Type-Options', 'nosniff');
       res.set('Cache-Control', 'no-cache');
-      return res.type(categoria.imageFile.mime).send(categoria.imageFile.bytes);
+      return res.type(imageFile.mime).send(imageFile.bytes);
     } catch (error) {
       return next(error);
     }
@@ -51,13 +45,9 @@ class CategoryController {
       return res.status(400).json({ message: 'Elegí una imagen JPEG, PNG o WebP' });
     }
 
-    const mime = extension === 'jpg' ? 'image/jpeg' : `image/${extension}`;
-    const image = `/api/categories/${id}/image?v=${randomUUID()}`;
     try {
-      const resultado = await Category.updateOne({ _id: id }, {
-        $set: { image, imageFile: { bytes: req.file.buffer, mime } }
-      });
-      if (!resultado.matchedCount) {
+      const image = await guardarFotoCategoria(id, req.file.buffer, extension);
+      if (!image) {
         return res.status(404).json({ message: 'Categoría no encontrada' });
       }
       return res.json({ message: 'Foto de la categoría actualizada', data: { image } });
@@ -69,7 +59,7 @@ class CategoryController {
   // Lista todas las categorías.
   async getAll(req, res) {
     try {
-      const categories = await Category.find();
+      const categories = await listarCategorias();
 
       return res.status(200).json({
         message: 'success',
@@ -95,7 +85,7 @@ class CategoryController {
         });
       }
 
-      const category = await Category.findById(id);
+      const category = await buscarCategoria(id);
 
       if (!category) {
         return res.status(404).json({
@@ -146,15 +136,8 @@ class CategoryController {
         });
       }
 
-      const formattedName = formatCategoryName(name);
-      if (await Category.exists({ name: formattedName }).collation(categoryNameCollation)) {
-        return duplicateName(res);
-      }
-
-      const category = await Category.create({
-        name: formattedName,
-        description
-      });
+      const { category, duplicada } = await crearCategoria({ name, description });
+      if (duplicada) return duplicateName(res);
 
       return res.status(201).json({
         message: 'success',
@@ -213,22 +196,8 @@ class CategoryController {
         });
       }
 
-      const formattedName = formatCategoryName(name);
-      if (await Category.exists({
-        _id: { $ne: id },
-        name: formattedName
-      }).collation(categoryNameCollation)) {
-        if (!(await Category.exists({ _id: id }))) {
-          return res.status(404).json({ message: 'Categoría no encontrada' });
-        }
-        return duplicateName(res);
-      }
-
-      const category = await Category.findByIdAndUpdate(
-        id,
-        { name: formattedName, description },
-        { new: true, runValidators: true }
-      );
+      const { category, duplicada } = await editarCategoria(id, { name, description });
+      if (duplicada) return duplicateName(res);
 
       if (!category) {
         return res.status(404).json({
@@ -267,24 +236,12 @@ class CategoryController {
         });
       }
 
-      const category = await Category.findById(id);
-
-      if (!category) {
-        return res.status(404).json({
-          message: 'Categoría no encontrada'
-        });
-      }
-
-      // Sigue el criterio de carreras y materias de la cátedra.
-      const dishes = await Dish.find({ category: id });
-
-      if (dishes.length > 0) {
+      const { category: deletedCategory, tienePlatos } = await eliminarCategoria(id);
+      if (tienePlatos) {
         return res.status(400).json({
           message: 'No se puede eliminar una categoría con platos asociados'
         });
       }
-
-      const deletedCategory = await Category.findByIdAndDelete(id);
 
       if (!deletedCategory) {
         return res.status(404).json({
