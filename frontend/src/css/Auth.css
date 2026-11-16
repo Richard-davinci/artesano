@@ -1,0 +1,102 @@
+/* Card compartida de login y registro. */
+.auth-card {
+    box-sizing: border-box;
+    width: min(calc(100% - 2rem), 31rem);
+    margin: clamp(2rem, 4vw, 3.5rem) auto clamp(3rem, 6vw, 5rem);
+    padding: clamp(1.4rem, 5vw, 2.5rem);
+    border: 1px solid #d9c6b2;
+    border-radius: 1.25rem;
+    background: #fffdf8;
+}
+
+.auth-card h1 {
+    margin: 0 0 1.5rem;
+    color: #292522;
+    font: 800 clamp(1.85rem, 5vw, 2.5rem)/1.2 system-ui, sans-serif;
+    letter-spacing: -.045em;
+}
+
+/* Campos, ayuda y estado del formulario. */
+.auth-card form p {
+    margin: 0 0 1rem;
+}
+
+.auth-card label {
+    display: block;
+    margin-bottom: .4rem;
+    font-size: .875rem;
+    font-weight: 700;
+}
+
+.auth-card input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: .6rem .85rem;
+    border: 1px solid #b9ada6;
+    border-radius: .5rem;
+    background: #fffdf8;
+    color: inherit;
+    font: inherit;
+}
+
+.auth-card form .auth-hint {
+    margin-top: -.55rem;
+    color: #565656;
+    font-size: .825rem;
+    line-height: 1.55;
+}
+
+.auth-card button {
+    min-height: 2.75rem;
+    padding: .6rem 1rem;
+    border: 1px solid #b9ada6;
+    border-radius: .5rem;
+    background: #fffdf8;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-card button[type="submit"] {
+    width: 100%;
+    border-color: transparent;
+    background: #ed6d41;
+}
+
+.auth-card button:enabled:hover {
+    border-color: #a94020;
+}
+
+.auth-card button:disabled {
+    opacity: .65;
+    cursor: wait;
+}
+
+.auth-card [role="alert"] {
+    margin: .85rem 0 0;
+    color: #922c18;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.auth-card a {
+    color: #8d341e;
+    font-weight: 700;
+    text-underline-offset: .15em;
+}
+
+.auth-card :is(a, input, button):focus-visible {
+    outline: 2px solid #a94020;
+    outline-offset: 3px;
+}
+
+/* Enlace entre login y registro. */
+.auth-alternative {
+    margin: 1.25rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid #d8cbc2;
+    font-size: .9rem;
+    line-height: 1.55;
+}

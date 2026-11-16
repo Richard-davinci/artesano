@@ -31,7 +31,7 @@ export default function Login() {
 
   if (autenticado) {
     return (
-      <main className="menu">
+      <main className="auth-card">
         <h1>Sesión iniciada</h1>
         <p><Link to="/perfil">Ir a mi perfil</Link></p>
         <button type="button" onClick={logout}>Cerrar sesión</button>
@@ -40,16 +40,16 @@ export default function Login() {
   }
 
   return (
-    <main className="menu">
+    <main className="auth-card">
       <h1>Iniciar sesión</h1>
       <form onSubmit={handleSubmit}>
         <p>
-          <label htmlFor="email">Email</label>{' '}
+          <label htmlFor="email">Correo electrónico</label>
           <input id="email" name="email" type="email" autoComplete="username"
             value={email} onChange={(event) => setEmail(event.target.value)} required />
         </p>
         <p>
-          <label htmlFor="password">Contraseña</label>{' '}
+          <label htmlFor="password">Contraseña</label>
           <input id="password" name="password" type="password" autoComplete="current-password"
             value={password} onChange={(event) => setPassword(event.target.value)} required />
         </p>
@@ -58,6 +58,7 @@ export default function Login() {
         </button>
         {error && <p role="alert">{error}</p>}
       </form>
+      <p className="auth-alternative">¿Todavía no tenés cuenta? <Link to="/registro">Registrate</Link></p>
     </main>
   );
 }

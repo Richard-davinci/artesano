@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { registrarUsuario } from '../services/api.js';
 
 export default function Registro() {
@@ -66,30 +66,30 @@ export default function Registro() {
   }
 
   return (
-    <main className="menu">
+    <main className="auth-card">
       <h1>Registrarme</h1>
       <form onSubmit={handleSubmit}>
         <p>
-          <label htmlFor="name">Nombre</label>{' '}
+          <label htmlFor="name">Nombre</label>
           <input id="name" name="name" autoComplete="name"
             value={usuario.name} onChange={handleChange} required />
         </p>
         <p>
-          <label htmlFor="email">Email</label>{' '}
+          <label htmlFor="email">Correo electrónico</label>
           <input id="email" name="email" type="email" autoComplete="email"
             value={usuario.email} onChange={handleChange} required />
         </p>
         <p>
-          <label htmlFor="password">Contraseña</label>{' '}
+          <label htmlFor="password">Contraseña</label>
           <input id="password" name="password" type="password" autoComplete="new-password"
             aria-describedby="reglas-password" minLength={8}
             value={usuario.password} onChange={handleChange} required />
         </p>
-        <p id="reglas-password">
+        <p className="auth-hint" id="reglas-password">
           Usá al menos 8 caracteres. Incluí al menos una minúscula, una mayúscula, un número y un carácter especial.
         </p>
         <p>
-          <label htmlFor="confirmPassword">Repetir contraseña</label>{' '}
+          <label htmlFor="confirmPassword">Repetir contraseña</label>
           <input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password"
             value={usuario.confirmPassword} onChange={handleChange} required />
         </p>
@@ -98,6 +98,7 @@ export default function Registro() {
         </button>
         {error && <p role="alert">{error}</p>}
       </form>
+      <p className="auth-alternative">¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link></p>
     </main>
   );
 }

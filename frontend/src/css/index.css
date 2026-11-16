@@ -1,6 +1,7 @@
 /* Estilos de la estructura y la carta. */
 @import './Layout.css';
 @import './NuestraCarta.css';
+@import './Auth.css';
 
 /* Estilos generales del sitio. */
 :root {
