@@ -1,17 +1,28 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import IconoAccion from './IconoAccion.jsx';
+import ConfirmarBorrado from './ConfirmarBorrado.jsx';
+import PanelLateral from './PanelLateral.jsx';
+import ListaPaginada from './ListaPaginada.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { borrarCategoria, crearCategoria, editarCategoria } from '../services/api.js';
+import { apiUrl, borrarCategoria, crearCategoria, editarCategoria, subirFotoCategoria } from '../services/api.js';
 
 export default function ListaCategorias({ categorias, setCategorias }) {
   const { token } = useAuth();
+  const campoNombre = useRef(null);
+  const campoFoto = useRef(null);
+  const panel = useRef(null);
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [idEnEdicion, setIdEnEdicion] = useState(null);
+  const [archivoFoto, setArchivoFoto] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [idBorrando, setIdBorrando] = useState(null);
+  const [pendienteBorrado, setPendienteBorrado] = useState(null);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [avisoBorrado, setAvisoBorrado] = useState(null);
   const ocupado = guardando || idBorrando !== null;
+  const imagenActual = categorias.find((categoria) => categoria._id === idEnEdicion)?.image;
 
   // Carga la categoría seleccionada en el formulario.
   function iniciarEdicion(categoria) {
@@ -20,10 +31,20 @@ export default function ListaCategorias({ categorias, setCategorias }) {
     setDescripcion(categoria.description ?? '');
     setError('');
     setMensaje('');
+    setAvisoBorrado(null);
+    abrirPanel();
+  }
+
+  function abrirPanel() {
+    campoFoto.current.value = '';
+    setArchivoFoto(null);
+    panel.current.showModal();
+    campoNombre.current.focus();
   }
 
   // Limpia el formulario y vuelve al modo de creación.
   function limpiarFormulario() {
+    setAvisoBorrado(null);
     setIdEnEdicion(null);
     setNombre('');
     setDescripcion('');
@@ -41,6 +62,11 @@ export default function ListaCategorias({ categorias, setCategorias }) {
       setError('Ingresá el nombre de la categoría.');
       return;
     }
+    if (archivoFoto && (!['image/jpeg', 'image/png', 'image/webp'].includes(archivoFoto.type) ||
+        archivoFoto.size > 4 * 1024 * 1024)) {
+      setError('Elegí una imagen JPEG, PNG o WebP de hasta 4 MiB.');
+      return;
+    }
 
     setGuardando(true);
     try {
@@ -49,16 +75,32 @@ export default function ListaCategorias({ categorias, setCategorias }) {
         description: descripcion.trim()
       };
 
+      const categoriaGuardada = idEnEdicion
+        ? await editarCategoria(token, idEnEdicion, datos)
+        : await crearCategoria(token, datos);
+
       if (idEnEdicion) {
-        const actualizada = await editarCategoria(token, idEnEdicion, datos);
         setCategorias((actuales) => actuales.map((categoria) =>
-          categoria._id === idEnEdicion ? actualizada : categoria
+          categoria._id === idEnEdicion ? categoriaGuardada : categoria
         ));
       } else {
-        const creada = await crearCategoria(token, datos);
-        setCategorias((actuales) => [...actuales, creada]);
+        setCategorias((actuales) => [...actuales, categoriaGuardada]);
       }
 
+      if (archivoFoto) {
+        try {
+          const { image } = await subirFotoCategoria(token, categoriaGuardada._id, archivoFoto);
+          setCategorias((actuales) => actuales.map((categoria) =>
+            categoria._id === categoriaGuardada._id ? { ...categoria, image } : categoria
+          ));
+        } catch (error) {
+          setIdEnEdicion(categoriaGuardada._id);
+          setError(`Los datos se guardaron, pero la foto no se pudo subir. ${error.message}`);
+          return;
+        }
+      }
+
+      panel.current.close();
       limpiarFormulario();
       setMensaje(idEnEdicion ? 'Categoría actualizada.' : 'Categoría creada.');
     } catch (error) {
@@ -70,19 +112,18 @@ export default function ListaCategorias({ categorias, setCategorias }) {
 
   // Pide confirmación y quita la categoría tras el borrado.
   async function eliminarCategoria(categoria) {
-    if (!window.confirm(`¿Borrar la categoría «${categoria.name}»?`)) return;
-
     setError('');
     setMensaje('');
+    setAvisoBorrado(null);
     setIdBorrando(categoria._id);
 
     try {
       await borrarCategoria(token, categoria._id);
       setCategorias((actuales) => actuales.filter((actual) => actual._id !== categoria._id));
       if (idEnEdicion === categoria._id) limpiarFormulario();
-      setMensaje('Categoría eliminada.');
+      setAvisoBorrado({ mensaje: 'Categoría eliminada.' });
     } catch (error) {
-      setError(error.message);
+      setAvisoBorrado({ error: error.message });
     } finally {
       setIdBorrando(null);
     }
@@ -90,43 +131,98 @@ export default function ListaCategorias({ categorias, setCategorias }) {
 
   return (
     <>
-      {categorias.length === 0 ? <p>Todavía no hay categorías.</p> : (
-        <ul>
-          {categorias.map((categoria) => (
-            <li key={categoria._id}>
-              <strong>{categoria.name}</strong>
-              {categoria.description && <p>{categoria.description}</p>}
-              <button type="button" disabled={ocupado} onClick={() => iniciarEdicion(categoria)}>
-                Editar
-              </button>
-              <button type="button" disabled={ocupado} onClick={() => eliminarCategoria(categoria)}>
-                {idBorrando === categoria._id ? 'Borrando...' : 'Borrar'}
-              </button>
-            </li>
-          ))}
-        </ul>
+      {pendienteBorrado && (
+        <ConfirmarBorrado tipo="categoría" nombre={pendienteBorrado.name}
+          onCancelar={() => setPendienteBorrado(null)}
+          onConfirmar={() => {
+            setPendienteBorrado(null);
+            eliminarCategoria(pendienteBorrado);
+          }} />
       )}
-      <h3>{idEnEdicion ? 'Editar categoría' : 'Nueva categoría'}</h3>
-      <form onSubmit={guardarCategoria}>
-        <fieldset disabled={ocupado}>
-          <p>
-            <label htmlFor="nombre-categoria">Nombre</label>{' '}
-            <input id="nombre-categoria" value={nombre}
-              onChange={(event) => setNombre(event.target.value)} required />
-          </p>
-          <p>
-            <label htmlFor="descripcion-categoria">Descripción</label>{' '}
-            <textarea id="descripcion-categoria" value={descripcion}
-              onChange={(event) => setDescripcion(event.target.value)} />
-          </p>
-          <button type="submit">
-            {guardando ? 'Guardando...' : idEnEdicion ? 'Guardar cambios' : 'Crear categoría'}
-          </button>
-          {idEnEdicion && <button type="button" onClick={limpiarFormulario}>Cancelar</button>}
-        </fieldset>
-      </form>
-      {error && <p role="alert">{error}</p>}
+      <div className="admin-toolbar">
+        <h2 id="titulo-categorias">Categorías</h2>
+        <button className="boton-nuevo-admin" type="button" aria-haspopup="dialog" disabled={ocupado} onClick={() => {
+          limpiarFormulario();
+          abrirPanel();
+        }}>Nueva categoría</button>
+      </div>
+      <PanelLateral panelRef={panel} tituloId="titulo-form-categoria"
+        titulo={idEnEdicion ? 'Editar categoría' : 'Nueva categoría'} guardando={guardando}
+        acciones={
+          <>
+            <button type="button" disabled={ocupado} onClick={() => panel.current.close()}>Cancelar</button>
+            <button type="submit" form="form-datos-categoria" disabled={ocupado}>
+              {guardando ? 'Guardando...' : idEnEdicion ? 'Guardar cambios' : 'Crear categoría'}
+            </button>
+          </>
+        }>
+        <form id="form-datos-categoria" onSubmit={guardarCategoria}>
+          <fieldset disabled={ocupado}>
+            <p>
+              <label htmlFor="nombre-categoria">Nombre</label>{' '}
+              <input id="nombre-categoria" ref={campoNombre} value={nombre}
+                onChange={(event) => setNombre(event.target.value)} required />
+            </p>
+            <p>
+              <label htmlFor="descripcion-categoria">Descripción</label>{' '}
+              <textarea id="descripcion-categoria" value={descripcion}
+                onChange={(event) => setDescripcion(event.target.value)} />
+            </p>
+            <div className="form-foto-plato">
+              {imagenActual && <img className="miniatura-plato" src={`${apiUrl}${imagenActual}`} alt="Foto actual de la categoría" />}
+              <div className="admin-file-picker selector-foto-plato">
+                <input ref={campoFoto} id="foto-categoria" type="file" accept="image/jpeg,image/png,image/webp"
+                  aria-describedby="ayuda-foto-categoria" onChange={(event) => setArchivoFoto(event.target.files[0] || null)} />
+                <label className="admin-file-label" htmlFor="foto-categoria">
+                  {imagenActual ? 'Elegir otra foto' : 'Elegir foto de categoría'}
+                </label>
+                {archivoFoto && <span className="admin-file-name">{archivoFoto.name}</span>}
+                <p id="ayuda-foto-categoria">Opcional · JPEG, PNG o WebP · Hasta 4 MiB</p>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+        {error && <p role="alert">{error}</p>}
+      </PanelLateral>
       {mensaje && <p role="status">{mensaje}</p>}
+      {avisoBorrado?.error && <p className="aviso-borrado" role="alert">{avisoBorrado.error}</p>}
+      {avisoBorrado?.mensaje && <p className="aviso-borrado" role="status">{avisoBorrado.mensaje}</p>}
+      {categorias.length === 0 ? <p>Todavía no hay categorías.</p> : (
+        <ListaPaginada elementos={categorias} etiqueta="Páginas de categorías">
+          {(filas) => (
+        <table className="tabla-admin" aria-label="Listado de categorías">
+          <thead>
+            <tr>
+              <th scope="col">Categoría</th>
+              <th scope="col" className="columna-detalle">Descripción</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((categoria) => (
+              <tr key={categoria._id}>
+                <th scope="row">
+                  {categoria.name}
+                  {categoria.description && <span className="detalle-compacto">{categoria.description}</span>}
+                </th>
+                <td className="columna-detalle">{categoria.description || '—'}</td>
+                <td>
+                  <div className="acciones-tabla">
+                    <button type="button" aria-label={`Editar ${categoria.name}`} disabled={ocupado} onClick={() => iniciarEdicion(categoria)}>
+                      <IconoAccion tipo="editar" />
+                    </button>
+                    <button type="button" aria-haspopup="dialog" aria-label={`Borrar ${categoria.name}`} disabled={ocupado} onClick={() => setPendienteBorrado(categoria)}>
+                      {idBorrando === categoria._id ? '…' : <IconoAccion tipo="borrar" />}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+          )}
+        </ListaPaginada>
+      )}
     </>
   );
 }

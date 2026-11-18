@@ -2,6 +2,8 @@
 @import './Layout.css';
 @import './NuestraCarta.css';
 @import './Auth.css';
+@import './Perfil.css';
+@import './Admin.css';
 
 /* Estilos generales del sitio. */
 :root {

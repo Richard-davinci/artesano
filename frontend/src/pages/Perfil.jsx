@@ -38,6 +38,9 @@ export default function Perfil() {
 
   const imagenActual = preview || (perfil?.profileImage ? `${apiUrl}${perfil.profileImage}` : null);
 
+  const nombre = perfil?.name || user.name || 'Usuario';
+  const iniciales = nombre.trim().split(/\s+/).slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
+
   // Valida y muestra una vista previa de la foto elegida.
   function seleccionarImagen(evento) {
     const foto = evento.target.files[0];
@@ -86,32 +89,50 @@ export default function Perfil() {
   }
 
   return (
-    <main className="menu">
-      <h1>Mi perfil</h1>
-      <ul>
-        <li><strong>Nombre:</strong> {perfil?.name || user.name}</li>
-        {perfil && <li><strong>Email:</strong> {perfil.email}</li>}
-        <li><strong>Rol:</strong> {user.role}</li>
-      </ul>
-      {cargando && <p role="status">Cargando perfil...</p>}
-      {perfil && (
-        <>
-          {imagenActual
-            ? <img src={imagenActual} alt="Foto de perfil" width={128} />
-            : <p>Sin foto de perfil.</p>}
-          <form onSubmit={guardarImagen}>
-            <label htmlFor="profileImage">Seleccionar foto</label>{' '}
-            <input id="profileImage" type="file" accept="image/jpeg,image/png,image/webp"
-              onChange={seleccionarImagen} disabled={subiendo} />
-            <button type="submit" disabled={!archivo || subiendo}>
-              {subiendo ? 'Guardando...' : 'Guardar foto'}
-            </button>
-          </form>
-        </>
-      )}
-      {error && <p role="alert">{error}</p>}
-      {mensaje && <p role="status">{mensaje}</p>}
-      <button type="button" onClick={logout}>Cerrar sesión</button>
+    <main className="container perfil">
+      <header className="perfil-header">
+        <h1>Mi perfil<span className="acento">.</span></h1>
+        <button className="perfil-salir" type="button" onClick={logout}>Cerrar sesión</button>
+      </header>
+      <div className="perfil-grid">
+        <section className="perfil-card perfil-imagen" aria-labelledby="titulo-foto">
+          <h2 id="titulo-foto">Foto de perfil</h2>
+          <div className="perfil-avatar">
+            {imagenActual
+              ? <img className="foto-perfil" src={imagenActual} alt={preview ? 'Vista previa de la foto' : 'Foto de perfil'} />
+              : <span aria-hidden="true">{iniciales}</span>}
+          </div>
+          {perfil && (
+            <form onSubmit={guardarImagen}>
+              <div className="perfil-selector">
+                <input id="profileImage" type="file" accept="image/jpeg,image/png,image/webp"
+                  aria-describedby="ayuda-foto archivo-foto" onChange={seleccionarImagen} disabled={subiendo} />
+                <label className="perfil-upload-label" htmlFor="profileImage">
+                  {archivo ? 'Elegir otra foto' : 'Elegir foto'}
+                </label>
+              </div>
+              <p id="ayuda-foto" className="perfil-ayuda">JPEG, PNG o WebP · Hasta 2 MB</p>
+              <p id="archivo-foto" className="perfil-archivo" hidden={!archivo}>{archivo?.name}</p>
+              {archivo && (
+                <button type="submit" disabled={subiendo}>
+                  {subiendo ? 'Guardando...' : 'Guardar foto'}
+                </button>
+              )}
+            </form>
+          )}
+          {error && <p role="alert">{error}</p>}
+          {mensaje && <p role="status">{mensaje}</p>}
+        </section>
+        <section className="perfil-card" aria-labelledby="titulo-cuenta">
+          <h2 id="titulo-cuenta">Datos de la cuenta</h2>
+          {cargando && <p className="perfil-ayuda" role="status">Cargando perfil...</p>}
+          <dl className="perfil-datos">
+            <div><dt>Nombre</dt><dd>{nombre}</dd></div>
+            {perfil && <div><dt>Correo electrónico</dt><dd>{perfil.email}</dd></div>}
+            <div><dt>Rol</dt><dd><span className="perfil-rol">{user.role === 'admin' ? 'Administrador' : 'Usuario'}</span></dd></div>
+          </dl>
+        </section>
+      </div>
     </main>
   );
 }

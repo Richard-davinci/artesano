@@ -1,0 +1,200 @@
+/* Panel y secciones de Administración. */
+.vista-admin {
+    --acento: #ed6d41;
+    --texto-acento: #a94020;
+    --borde: #d9c6b2;
+    --papel: #fffdf8;
+    padding-block: clamp(2rem, 4vw, 3.5rem) clamp(3rem, 6vw, 5rem);
+}
+
+.vista-admin *, .vista-admin *::before, .vista-admin *::after {
+    box-sizing: border-box;
+}
+
+.vista-admin h1 {
+    font: 800 clamp(2.25rem, 5vw, 3rem)/1.2 system-ui, sans-serif;
+    letter-spacing: -.055em;
+}
+
+.secciones-admin > section {
+    padding: clamp(1rem, 3vw, 2rem);
+    border: 1px solid var(--borde);
+    border-radius: 1.25rem;
+    background: var(--papel);
+    overflow-wrap: anywhere;
+}
+
+/* Controles del formulario y selector de foto. */
+.vista-admin form p { margin: 0 0 1rem; }
+.vista-admin form label { font-size: .875rem; font-weight: 700; }
+.vista-admin form label:not(:has(input[type="checkbox"])) {
+  display: block;
+  margin-bottom: .4rem;
+}
+
+.vista-admin form :is(input:not([type="checkbox"]), select, textarea) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: .65rem .85rem;
+  border: 1px solid #b9b9b9;
+  border-radius: .48rem;
+  background: #f2f2f2;
+  color: inherit;
+}
+
+.vista-admin :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--texto-acento);
+  outline-offset: 3px;
+}
+
+.vista-admin button {
+  min-height: 2.65rem;
+  padding: .5rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: .55rem;
+  background: var(--papel);
+  color: inherit;
+  font-weight: 700;
+}
+
+.vista-admin button[type="submit"] {
+  border-color: transparent;
+  background: var(--acento);
+  color: #211914;
+}
+
+.vista-admin button:not(:disabled):hover { border-color: var(--texto-acento); }
+.vista-admin button:disabled { opacity: .55; }
+.vista-admin [role="alert"] { color: #922c18; font-weight: 700; }
+
+/* Tablas y paneles laterales. */
+.pestanas-admin { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
+.vista-admin .pestanas-admin button[aria-pressed="true"] { background: var(--acento); border-color: transparent; color: #211914; }
+.secciones-admin form { max-width: 36rem; }
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.secciones-admin .admin-toolbar h2 { margin: 0; }
+.admin-toolbar button { margin-inline-start: auto; }
+.vista-admin .boton-nuevo-admin { background: var(--acento); border-color: transparent; color: #211914; }
+.panel-lateral {
+  position: fixed;
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: min(100%, 30rem);
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 0;
+  border-left: 1px solid var(--borde);
+  background: var(--papel);
+  color: inherit;
+}
+.panel-lateral::backdrop { background: rgb(33 25 20 / 45%); }
+.confirmar-borrado {
+  width: min(27rem, calc(100% - 2rem));
+  padding: 1.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 1rem;
+  background: var(--papel);
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.confirmar-borrado::backdrop { background: rgb(33 25 20 / 45%); }
+.secciones-admin .confirmar-borrado h3 { margin: 0; font-size: 1.25rem; }
+.confirmar-borrado footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .65rem; margin-top: 1.25rem; }
+.vista-admin .confirmar-borrado .boton-borrar { background: #922c18; border-color: transparent; color: white; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.secciones-admin .panel-header h3 { margin: 0; font-size: 1.5rem; }
+.panel-lateral form fieldset { border: 0; padding: 0; margin: 0; }
+.form-foto-plato { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--borde); }
+.form-foto-plato legend { margin-bottom: .85rem; padding: 0; font-weight: 800; }
+.foto-plato-controles { display: flex; align-items: center; gap: .85rem; }
+.miniatura-plato { flex: none; width: 5rem; aspect-ratio: 1; object-fit: cover; border-radius: .65rem; }
+.selector-foto-plato { display: grid; justify-items: start; gap: .35rem; min-width: 0; }
+.vista-admin .selector-foto-plato p { margin: 0; color: #565656; font-size: .8rem; }
+.vista-admin button.boton-foto-secundario { margin-top: .75rem; background: var(--papel); border-color: var(--borde); color: var(--texto-acento); }
+.disponibilidad-plato {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: .75rem;
+  background: #f2f2f2;
+}
+.vista-admin form .disponibilidad-plato label { margin: 0; cursor: pointer; }
+.disponibilidad-plato span { display: block; margin-top: .2rem; font-weight: 400; }
+.disponibilidad-plato input { flex: none; width: 1.25rem; height: 1.25rem; accent-color: var(--acento); }
+.panel-lateral.con-footer[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; padding: 0; }
+.panel-lateral.con-footer .panel-header { margin: 0; padding: 1.25rem clamp(1.25rem, 4vw, 2rem); }
+.panel-content { overflow-y: auto; padding: .3rem clamp(1.25rem, 4vw, 2rem) 1.5rem; }
+.panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: .65rem;
+  padding: 1rem clamp(1.25rem, 4vw, 2rem);
+  border-top: 1px solid var(--borde);
+}
+.secciones-admin .aviso-borrado { margin-block: 1rem; }
+.secciones-admin h2 { margin-top: 0; letter-spacing: -.04em; }
+.secciones-admin h3 { margin-top: 2rem; }
+.secciones-admin form button + button { margin: .35rem 0 0 .5rem; }
+.tabla-admin { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+.tabla-admin :is(th, td) { padding: .75rem; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--borde); }
+.tabla-admin thead { background: #f2f2f2; }
+.paginacion-admin { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .5rem .75rem; margin-top: 1rem; }
+.paginacion-admin span { font-size: .875rem; }
+.tabla-admin thead th:last-child { width: 1%; }
+.detalle-compacto { display: none; }
+.acciones-tabla { display: flex; gap: .5rem; }
+.vista-admin .acciones-tabla button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+}
+.vista-admin .acciones-tabla button:last-child { color: #922c18; }
+.secciones-admin fieldset { min-width: 0; padding: 1rem; border: 1px solid var(--borde); border-radius: 1rem; }
+.secciones-admin textarea { resize: vertical; }
+
+.admin-file-picker { position: relative; }
+.vista-admin form .admin-file-picker input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    clip-path: inset(50%);
+}
+.vista-admin form .admin-file-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: .6rem .85rem;
+    border: 1px solid var(--borde);
+    border-radius: .5rem;
+    color: var(--texto-acento);
+    cursor: pointer;
+}
+.admin-file-label:hover { border-color: var(--texto-acento); }
+.admin-file-picker input:focus-visible + label { outline: 2px solid var(--texto-acento); outline-offset: 3px; }
+.admin-file-name { max-width: 100%; font-size: .875rem; overflow-wrap: anywhere; }
+.admin-file-picker p { font-size: .825rem; }
+
+@media (max-width: 640px) {
+    .tabla-admin .columna-detalle { display: none; }
+    .tabla-admin :is(th, td) { padding-inline: .5rem; }
+    .tabla-admin .detalle-compacto { display: block; margin-top: .25rem; color: #565656; font-size: .8rem; }
+}

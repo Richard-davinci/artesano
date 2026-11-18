@@ -115,3 +115,15 @@ export function subirFotoPerfil(token, archivo) {
   formData.append('profileImage', archivo);
   return fetchPrivado('/api/auth/profileimage', token, { method: 'POST', body: formData });
 }
+
+export function subirFotoCategoria(token, id, archivo) {
+  const formData = new FormData();
+  formData.append('image', archivo);
+  return fetchPrivado(`/api/categories/${id}/image`, token, { method: 'POST', body: formData });
+}
+
+export function subirFotoPlato(token, id, archivo) {
+  const formData = new FormData();
+  formData.append('image', archivo);
+  return fetchPrivado(`/api/dishes/${id}/image`, token, { method: 'POST', body: formData });
+}

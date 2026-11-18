@@ -4,6 +4,7 @@ import ListaPlatos from '../components/ListaPlatos.jsx';
 import { obtenerCategorias, obtenerPlatos } from '../services/api.js';
 
 export default function Admin() {
+  const [seccion, setSeccion] = useState('platos');
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -50,24 +51,32 @@ export default function Admin() {
   }, []);
 
   return (
-    <main className="menu">
+    <main className="container vista-admin">
       <h1>Administración</h1>
-      <section aria-labelledby="titulo-categorias">
-        <h2 id="titulo-categorias">Categorías</h2>
-        {cargando && <p role="status">Cargando categorías...</p>}
-        {error && <p role="alert">{error}</p>}
-        {!cargando && !error && (
-          <ListaCategorias categorias={categorias} setCategorias={setCategorias} />
-        )}
-      </section>
-      <section aria-labelledby="titulo-platos">
-        <h2 id="titulo-platos">Platos</h2>
-        {cargandoPlatos && <p role="status">Cargando platos...</p>}
-        {errorPlatos && <p role="alert">{errorPlatos}</p>}
-        {!cargandoPlatos && !errorPlatos && (
-          <ListaPlatos platos={platos} setPlatos={setPlatos} categorias={categorias} />
-        )}
-      </section>
+      <div className="pestanas-admin" role="group" aria-label="Secciones de administración">
+        <button type="button" aria-pressed={seccion === 'platos'} aria-controls="panel-platos"
+          onClick={() => setSeccion('platos')}>Platos</button>
+        <button type="button" aria-pressed={seccion === 'categorias'} aria-controls="panel-categorias"
+          onClick={() => setSeccion('categorias')}>Categorías</button>
+      </div>
+      <div className="secciones-admin">
+        <section id="panel-categorias" aria-labelledby="titulo-categorias" hidden={seccion !== 'categorias'}>
+          {(cargando || error) && <h2 id="titulo-categorias">Categorías</h2>}
+          {cargando && <p role="status">Cargando categorías...</p>}
+          {error && <p role="alert">{error}</p>}
+          {!cargando && !error && (
+            <ListaCategorias categorias={categorias} setCategorias={setCategorias} />
+          )}
+        </section>
+        <section id="panel-platos" aria-labelledby="titulo-platos" hidden={seccion !== 'platos'}>
+          {(cargandoPlatos || errorPlatos) && <h2 id="titulo-platos">Platos</h2>}
+          {cargandoPlatos && <p role="status">Cargando platos...</p>}
+          {errorPlatos && <p role="alert">{errorPlatos}</p>}
+          {!cargandoPlatos && !errorPlatos && (
+            <ListaPlatos platos={platos} setPlatos={setPlatos} categorias={categorias} />
+          )}
+        </section>
+      </div>
     </main>
   );
 }

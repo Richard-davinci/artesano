@@ -1,0 +1,121 @@
+/* Header y cards de Mi perfil. */
+.perfil {
+    max-width: 64rem;
+    padding-block: clamp(2rem, 4vw, 3.5rem) clamp(3rem, 6vw, 5rem);
+}
+
+.perfil-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.perfil-header h1 {
+    margin: 0;
+    font: 800 clamp(2.25rem, 5vw, 3rem)/1.2 system-ui, sans-serif;
+    letter-spacing: -.055em;
+}
+
+.perfil-header .acento { color: #ed6d41; }
+
+.perfil-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+}
+
+.perfil-card {
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid #d9c6b2;
+    border-radius: 1.25rem;
+    background: #fffdf8;
+    overflow-wrap: anywhere;
+}
+
+.perfil-card h2 { margin: 0; font-size: 1.25rem; }
+
+/* Avatar y selector accesible de foto. */
+.perfil-imagen { text-align: center; }
+
+.perfil-avatar {
+    display: grid;
+    place-items: center;
+    width: 6.5rem;
+    aspect-ratio: 1;
+    margin: 1rem auto;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #f2d4c9;
+    color: #8d341e;
+    font-size: 1.65rem;
+    font-weight: 800;
+}
+
+.foto-perfil { display: block; width: 100%; height: 100%; object-fit: cover; }
+.perfil-selector { position: relative; }
+
+.perfil-selector input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    clip-path: inset(50%);
+}
+
+.perfil :is(button, .perfil-upload-label) {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: .6rem .85rem;
+    border: 1px solid #b9ada6;
+    border-radius: .5rem;
+    background: #fffdf8;
+    color: #8d341e;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.perfil button[type="submit"] {
+    border-color: transparent;
+    background: #ed6d41;
+    color: #292522;
+}
+
+.perfil :is(button:enabled, .perfil-upload-label):hover { border-color: #a94020; }
+
+.perfil button:focus-visible, .perfil-selector input:focus-visible + label {
+    outline: 2px solid #a94020;
+    outline-offset: 3px;
+}
+
+.perfil button:disabled, .perfil-selector input:disabled + label { opacity: .65; cursor: wait; }
+.perfil-ayuda, .perfil-archivo, .perfil-imagen [role="status"] { font-size: .825rem; }
+.perfil-ayuda { color: #565656; }
+.perfil-imagen [role="status"] { color: #35644c; }
+.perfil-imagen [role="alert"] { color: #922c18; }
+
+/* Datos de la cuenta. */
+.perfil-datos { margin: .75rem 0 0; }
+.perfil-datos > div { padding-block: 1rem; border-bottom: 1px solid #d8cbc2; }
+.perfil-datos > div:last-child { padding-bottom: 0; border-bottom: 0; }
+.perfil-datos dt { color: #565656; font-size: .825rem; }
+.perfil-datos dd { margin: .3rem 0 0; font-weight: 700; }
+
+.perfil-rol {
+    display: inline-block;
+    padding: .3rem .75rem;
+    border-radius: 1rem;
+    background: #f2d4c9;
+    color: #8d341e;
+    font-size: .8rem;
+}
+
+@media (max-width: 640px) {
+    .perfil-grid { grid-template-columns: minmax(0, 1fr); }
+}
