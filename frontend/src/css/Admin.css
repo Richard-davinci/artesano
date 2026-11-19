@@ -231,3 +231,49 @@
 }
 
 .form-foto-plato .foto-pendiente { margin: .85rem 0 0; color: #565656; font-size: .825rem; line-height: 1.5; }
+
+
+/* Filtros del listado de Administración. */
+.admin-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-block: 1.25rem .75rem;
+}
+
+.admin-filters > div { flex: 1 1 13rem; min-width: 0; }
+.admin-filters label { display: block; margin-bottom: .4rem; font-size: .875rem; font-weight: 600; }
+.admin-filters :is(input, select) {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: .6rem .85rem;
+    border: 1px solid #b9ada6;
+    border-radius: .5rem;
+    background: var(--papel);
+    color: inherit;
+    font: inherit;
+}
+.admin-results { margin: 0; color: #565656; font-size: .825rem; }
+
+
+/* Miniaturas junto al nombre de cada registro. */
+.admin-item { display: flex; align-items: center; gap: .75rem; }
+.admin-item > div { min-width: 0; }
+.admin-thumbnail {
+    display: block;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--borde);
+    border-radius: .5rem;
+    object-fit: cover;
+    background: #f2e7d8;
+}
+.admin-thumbnail-empty {
+    display: grid;
+    place-items: center;
+    color: #65564c;
+    font-size: .65rem;
+    font-weight: 400;
+}

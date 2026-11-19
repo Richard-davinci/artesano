@@ -33,10 +33,12 @@ export default function useErroresCampos() {
     primero?.focus();
   }
 
-  function onInput(event) {
-    const { id } = event.target;
+  // Limpia el aviso después de actualizar el valor del campo.
+  function onChange(event) {
+    const { id, type } = event.target;
+    if (type === 'file') return;
     setErrores((actuales) => ({ ...actuales, [id]: '' }));
   }
 
-  return { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario: { onInvalid, onInput } };
+  return { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario: { onInvalid, onChange } };
 }

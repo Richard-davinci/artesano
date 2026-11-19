@@ -11,6 +11,8 @@ import { apiUrl, borrarCategoria, crearCategoria, editarCategoria, subirFotoCate
 export default function ListaCategorias({ categorias, setCategorias }) {
   const { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario } = useErroresCampos();
   const { token } = useAuth();
+  const [busqueda, setBusqueda] = useState('');
+
   const campoNombre = useRef(null);
   const campoFoto = useRef(null);
   const panel = useRef(null);
@@ -146,6 +148,11 @@ export default function ListaCategorias({ categorias, setCategorias }) {
     }
   }
 
+  // Busca por nombre antes de dividir el listado en páginas.
+  const resultados = categorias.filter((actual) =>
+    actual.name.toLocaleLowerCase('es').includes(busqueda.trim().toLocaleLowerCase('es'))
+  );
+
   return (
     <>
       {pendienteBorrado && (
@@ -163,6 +170,20 @@ export default function ListaCategorias({ categorias, setCategorias }) {
           abrirPanel();
         }}>Nueva categoría</button>
       </div>
+      <div className="admin-filters" aria-label="Filtros de categorias">
+        <div>
+          <label htmlFor="buscar-categorias-admin">Buscar categoría</label>
+          <input id="buscar-categorias-admin" type="search" value={busqueda}
+            placeholder="Buscar por nombre" onChange={(event) => setBusqueda(event.target.value)} />
+        </div>
+        <button type="button" disabled={!busqueda}
+          onClick={() => { setBusqueda(''); }}>
+          Limpiar filtros
+        </button>
+      </div>
+      <p className="admin-results" role="status">
+        {resultados.length} de {categorias.length} categorías
+      </p>
       <PanelLateral panelRef={panel} tituloId="titulo-form-categoria"
         titulo={idEnEdicion ? 'Editar categoría' : 'Nueva categoría'} guardando={guardando}
         acciones={
@@ -206,8 +227,8 @@ export default function ListaCategorias({ categorias, setCategorias }) {
       {mensaje && <p role="status">{mensaje}</p>}
       {avisoBorrado?.error && <p className="aviso-borrado" role="alert">{avisoBorrado.error}</p>}
       {avisoBorrado?.mensaje && <p className="aviso-borrado" role="status">{avisoBorrado.mensaje}</p>}
-      {categorias.length === 0 ? <p>Todavía no hay categorías.</p> : (
-        <ListaPaginada elementos={categorias} etiqueta="Páginas de categorías">
+      {categorias.length === 0 ? <p>Todavía no hay categorías.</p> : resultados.length === 0 ? <p>No se encontraron categorías con esos filtros.</p> : (
+        <ListaPaginada key={busqueda} elementos={resultados} etiqueta="Páginas de categorías">
           {(filas) => (
         <table className="tabla-admin" aria-label="Listado de categorías">
           <thead>
@@ -221,8 +242,15 @@ export default function ListaCategorias({ categorias, setCategorias }) {
             {filas.map((categoria) => (
               <tr key={categoria._id}>
                 <th scope="row">
-                  {categoria.name}
-                  {categoria.description && <span className="detalle-compacto">{categoria.description}</span>}
+                  <div className="admin-item">
+                    {categoria.image
+                      ? <img className="admin-thumbnail" src={apiUrl + categoria.image} alt="" width="48" height="48" loading="lazy" />
+                      : <span className="admin-thumbnail admin-thumbnail-empty">Sin foto</span>}
+                    <div>
+                      {categoria.name}
+                      {categoria.description && <span className="detalle-compacto">{categoria.description}</span>}
+                    </div>
+                  </div>
                 </th>
                 <td className="columna-detalle">{categoria.description || '—'}</td>
                 <td>

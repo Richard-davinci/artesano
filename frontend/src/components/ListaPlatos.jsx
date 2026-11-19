@@ -22,6 +22,9 @@ function fotoValida(archivo) {
 export default function ListaPlatos({ platos, setPlatos, categorias }) {
   const { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario } = useErroresCampos();
   const { token } = useAuth();
+  const [busqueda, setBusqueda] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('');
+
   const campoNombre = useRef(null);
   const panel = useRef(null);
   const formularioFoto = useRef(null);
@@ -196,6 +199,12 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
     setNombreFoto(archivo.name);
   }
 
+  // Filtra el listado antes de dividirlo en páginas.
+  const resultados = platos.filter((actual) =>
+    actual.name.toLocaleLowerCase('es').includes(busqueda.trim().toLocaleLowerCase('es')) &&
+    (!categoriaFiltro || (actual.category?._id ?? actual.category) === categoriaFiltro)
+  );
+
   return (
     <>
       {pendienteBorrado && (
@@ -213,6 +222,30 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
           abrirPanel();
         }}>Nuevo plato</button>
       </div>
+      <div className="admin-filters" aria-label="Filtros de platos">
+        <div>
+          <label htmlFor="buscar-platos-admin">Buscar plato</label>
+          <input id="buscar-platos-admin" type="search" value={busqueda}
+            placeholder="Buscar por nombre" onChange={(event) => setBusqueda(event.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="categoria-filtro-admin">Categoría</label>
+          <select id="categoria-filtro-admin" value={categoriaFiltro}
+            onChange={(event) => setCategoriaFiltro(event.target.value)}>
+            <option value="">Todas las categorías</option>
+            {categorias.map((categoria) => (
+              <option key={categoria._id} value={categoria._id}>{categoria.name}</option>
+            ))}
+          </select>
+        </div>
+        <button type="button" disabled={!busqueda && !categoriaFiltro}
+          onClick={() => { setBusqueda(''); setCategoriaFiltro(''); }}>
+          Limpiar filtros
+        </button>
+      </div>
+      <p className="admin-results" role="status">
+        {resultados.length} de {platos.length} platos
+      </p>
       <PanelLateral panelRef={panel} tituloId="titulo-form-plato"
         titulo={idEnEdicion ? 'Editar plato' : 'Nuevo plato'} guardando={guardando}
         acciones={
@@ -290,8 +323,8 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
       {mensaje && <p role="status">{mensaje}</p>}
       {avisoBorrado?.error && <p className="aviso-borrado" role="alert">{avisoBorrado.error}</p>}
       {avisoBorrado?.mensaje && <p className="aviso-borrado" role="status">{avisoBorrado.mensaje}</p>}
-      {platos.length === 0 ? <p>Todavía no hay platos.</p> : (
-        <ListaPaginada elementos={platos} etiqueta="Páginas de platos">
+      {platos.length === 0 ? <p>Todavía no hay platos.</p> : resultados.length === 0 ? <p>No se encontraron platos con esos filtros.</p> : (
+        <ListaPaginada key={JSON.stringify([busqueda, categoriaFiltro])} elementos={resultados} etiqueta="Páginas de platos">
           {(filas) => (
         <table className="tabla-admin" aria-label="Listado de platos">
           <thead>
@@ -311,8 +344,15 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
               return (
                 <tr key={plato._id}>
                   <th scope="row">
-                    {plato.name}
-                    <span className="detalle-compacto">{categoria} · {precio} · {disponibilidad}</span>
+                    <div className="admin-item">
+                      {plato.image
+                        ? <img className="admin-thumbnail" src={apiUrl + plato.image} alt="" width="48" height="48" loading="lazy" />
+                        : <span className="admin-thumbnail admin-thumbnail-empty">Sin foto</span>}
+                      <div>
+                        {plato.name}
+                        <span className="detalle-compacto">{categoria} · {precio} · {disponibilidad}</span>
+                      </div>
+                    </div>
                   </th>
                   <td className="columna-detalle">{categoria}</td>
                   <td className="columna-detalle">{precio}</td>
