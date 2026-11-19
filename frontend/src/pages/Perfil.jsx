@@ -1,8 +1,11 @@
+import useErroresCampos from '../components/useErroresCampos.js';
+import ErrorCampo from '../components/ErrorCampo.jsx';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiUrl, obtenerPerfil, subirFotoPerfil } from '../services/api.js';
 
 export default function Perfil() {
+  const { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario } = useErroresCampos();
   const { token, user, logout } = useAuth();
   const [perfil, setPerfil] = useState(null);
   const [archivo, setArchivo] = useState(null);
@@ -47,16 +50,17 @@ export default function Perfil() {
     setArchivo(null);
     setPreview(null);
     setError('');
+    limpiarErrores();
     setMensaje('');
     if (!foto) return;
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(foto.type)) {
-      setError('Elegí una imagen JPEG, PNG o WebP.');
+      setErrorCampo('profileImage', 'Elegí una imagen JPEG, PNG o WebP.');
       evento.target.value = '';
       return;
     }
     if (foto.size > 2 * 1024 * 1024) {
-      setError('La imagen no puede superar los 2 MB.');
+      setErrorCampo('profileImage', 'La imagen no puede superar los 2 MiB.');
       evento.target.value = '';
       return;
     }
@@ -73,6 +77,7 @@ export default function Perfil() {
     const formulario = evento.currentTarget;
     setSubiendo(true);
     setError('');
+    limpiarErrores();
     setMensaje('');
 
     try {
@@ -103,15 +108,15 @@ export default function Perfil() {
               : <span aria-hidden="true">{iniciales}</span>}
           </div>
           {perfil && (
-            <form onSubmit={guardarImagen}>
+            <form {...eventosFormulario} onSubmit={guardarImagen}>
               <div className="perfil-selector">
-                <input id="profileImage" type="file" accept="image/jpeg,image/png,image/webp"
-                  aria-describedby="ayuda-foto archivo-foto" onChange={seleccionarImagen} disabled={subiendo} />
+                <input id="profileImage" {...atributosCampo('profileImage', 'ayuda-foto archivo-foto')} type="file" accept="image/jpeg,image/png,image/webp" onChange={seleccionarImagen} disabled={subiendo} />
                 <label className="perfil-upload-label" htmlFor="profileImage">
                   {archivo ? 'Elegir otra foto' : 'Elegir foto'}
                 </label>
+            <ErrorCampo id="profileImage" mensaje={errores['profileImage']} />
               </div>
-              <p id="ayuda-foto" className="perfil-ayuda">JPEG, PNG o WebP · Hasta 2 MB</p>
+              <p id="ayuda-foto" className="perfil-ayuda">JPEG, PNG o WebP · Hasta 2 MiB</p>
               <p id="archivo-foto" className="perfil-archivo" hidden={!archivo}>{archivo?.name}</p>
               {archivo && (
                 <button type="submit" disabled={subiendo}>

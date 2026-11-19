@@ -1,3 +1,5 @@
+import useErroresCampos from '../components/useErroresCampos.js';
+import ErrorCampo from '../components/ErrorCampo.jsx';
 import { useRef, useState } from 'react';
 import IconoAccion from './IconoAccion.jsx';
 import ConfirmarBorrado from './ConfirmarBorrado.jsx';
@@ -7,6 +9,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { apiUrl, borrarCategoria, crearCategoria, editarCategoria, subirFotoCategoria } from '../services/api.js';
 
 export default function ListaCategorias({ categorias, setCategorias }) {
+  const { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario } = useErroresCampos();
   const { token } = useAuth();
   const campoNombre = useRef(null);
   const campoFoto = useRef(null);
@@ -30,6 +33,7 @@ export default function ListaCategorias({ categorias, setCategorias }) {
     setNombre(categoria.name);
     setDescripcion(categoria.description ?? '');
     setError('');
+    limpiarErrores();
     setMensaje('');
     setAvisoBorrado(null);
     abrirPanel();
@@ -49,6 +53,7 @@ export default function ListaCategorias({ categorias, setCategorias }) {
     setNombre('');
     setDescripcion('');
     setError('');
+    limpiarErrores();
     setMensaje('');
   }
 
@@ -56,23 +61,34 @@ export default function ListaCategorias({ categorias, setCategorias }) {
   async function guardarCategoria(event) {
     event.preventDefault();
     setError('');
+    limpiarErrores();
     setMensaje('');
 
-    if (!nombre.trim()) {
-      setError('Ingresá el nombre de la categoría.');
+    const nombreLimpio = nombre.trim();
+    const descripcionLimpia = descripcion.trim();
+    if (!nombreLimpio) {
+      setErrorCampo('nombre-categoria', 'Ingresá el nombre de la categoría.');
+      return;
+    }
+    if (nombreLimpio.length < 3 || nombreLimpio.length > 60) {
+      setErrorCampo('nombre-categoria', 'El nombre de la categoría debe tener entre 3 y 60 caracteres.');
+      return;
+    }
+    if (descripcionLimpia.length > 300) {
+      setErrorCampo('descripcion-categoria', 'La descripción de la categoría no puede superar los 300 caracteres.');
       return;
     }
     if (archivoFoto && (!['image/jpeg', 'image/png', 'image/webp'].includes(archivoFoto.type) ||
         archivoFoto.size > 4 * 1024 * 1024)) {
-      setError('Elegí una imagen JPEG, PNG o WebP de hasta 4 MiB.');
+      setErrorCampo('foto-categoria', 'Elegí una imagen JPEG, PNG o WebP de hasta 4 MiB.');
       return;
     }
 
     setGuardando(true);
     try {
       const datos = {
-        name: nombre.trim(),
-        description: descripcion.trim()
+        name: nombreLimpio,
+        description: descripcionLimpia
       };
 
       const categoriaGuardada = idEnEdicion
@@ -113,6 +129,7 @@ export default function ListaCategorias({ categorias, setCategorias }) {
   // Pide confirmación y quita la categoría tras el borrado.
   async function eliminarCategoria(categoria) {
     setError('');
+    limpiarErrores();
     setMensaje('');
     setAvisoBorrado(null);
     setIdBorrando(categoria._id);
@@ -156,26 +173,28 @@ export default function ListaCategorias({ categorias, setCategorias }) {
             </button>
           </>
         }>
-        <form id="form-datos-categoria" onSubmit={guardarCategoria}>
+        <form {...eventosFormulario} id="form-datos-categoria" onSubmit={guardarCategoria}>
           <fieldset disabled={ocupado}>
             <p>
               <label htmlFor="nombre-categoria">Nombre</label>{' '}
-              <input id="nombre-categoria" ref={campoNombre} value={nombre}
+              <input id="nombre-categoria" {...atributosCampo('nombre-categoria')} ref={campoNombre} value={nombre}
                 onChange={(event) => setNombre(event.target.value)} required />
+            <ErrorCampo id="nombre-categoria" mensaje={errores['nombre-categoria']} />
             </p>
             <p>
               <label htmlFor="descripcion-categoria">Descripción</label>{' '}
-              <textarea id="descripcion-categoria" value={descripcion}
+              <textarea id="descripcion-categoria" {...atributosCampo('descripcion-categoria')} value={descripcion}
                 onChange={(event) => setDescripcion(event.target.value)} />
+            <ErrorCampo id="descripcion-categoria" mensaje={errores['descripcion-categoria']} />
             </p>
             <div className="form-foto-plato">
               {imagenActual && <img className="miniatura-plato" src={`${apiUrl}${imagenActual}`} alt="Foto actual de la categoría" />}
               <div className="admin-file-picker selector-foto-plato">
-                <input ref={campoFoto} id="foto-categoria" type="file" accept="image/jpeg,image/png,image/webp"
-                  aria-describedby="ayuda-foto-categoria" onChange={(event) => setArchivoFoto(event.target.files[0] || null)} />
+                <input ref={campoFoto} id="foto-categoria" {...atributosCampo('foto-categoria', 'ayuda-foto-categoria')} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setArchivoFoto(event.target.files[0] || null)} />
                 <label className="admin-file-label" htmlFor="foto-categoria">
                   {imagenActual ? 'Elegir otra foto' : 'Elegir foto de categoría'}
                 </label>
+            <ErrorCampo id="foto-categoria" mensaje={errores['foto-categoria']} />
                 {archivoFoto && <span className="admin-file-name">{archivoFoto.name}</span>}
                 <p id="ayuda-foto-categoria">Opcional · JPEG, PNG o WebP · Hasta 4 MiB</p>
               </div>

@@ -100,3 +100,25 @@
     font-size: .9rem;
     line-height: 1.55;
 }
+
+/* Campo de contraseña con control de visibilidad. */
+.password-field {
+    display: flex;
+    align-items: stretch;
+    gap: .5rem;
+}
+
+.password-field input {
+    flex: 1;
+    min-width: 0;
+}
+
+.auth-card .password-field button {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 2.75rem;
+    padding-inline: .75rem;
+    font-size: .825rem;
+    color: #8d341e;
+}

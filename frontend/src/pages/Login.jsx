@@ -1,8 +1,12 @@
+import PasswordInput from '../components/PasswordInput.jsx';
+import useErroresCampos from '../components/useErroresCampos.js';
+import ErrorCampo from '../components/ErrorCampo.jsx';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login() {
+  const { errores, limpiarErrores, atributosCampo, eventosFormulario } = useErroresCampos();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -17,6 +21,7 @@ export default function Login() {
     event.preventDefault();
     setEnviando(true);
     setError('');
+    limpiarErrores();
 
     try {
       await login(email, password);
@@ -42,16 +47,18 @@ export default function Login() {
   return (
     <main className="auth-card">
       <h1>Iniciar sesión</h1>
-      <form onSubmit={handleSubmit}>
+      <form {...eventosFormulario} onSubmit={handleSubmit}>
         <p>
           <label htmlFor="email">Correo electrónico</label>
-          <input id="email" name="email" type="email" autoComplete="username"
+          <input id="email" {...atributosCampo('email')} name="email" type="email" autoComplete="username"
             value={email} onChange={(event) => setEmail(event.target.value)} required />
+            <ErrorCampo id="email" mensaje={errores['email']} />
         </p>
         <p>
           <label htmlFor="password">Contraseña</label>
-          <input id="password" name="password" type="password" autoComplete="current-password"
+          <PasswordInput id="password" {...atributosCampo('password')} name="password" type="password" autoComplete="current-password"
             value={password} onChange={(event) => setPassword(event.target.value)} required />
+            <ErrorCampo id="password" mensaje={errores['password']} />
         </p>
         <button type="submit" disabled={enviando}>
           {enviando ? 'Iniciando sesión...' : 'Iniciar sesión'}

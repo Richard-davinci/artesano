@@ -1,3 +1,5 @@
+import useErroresCampos from '../components/useErroresCampos.js';
+import ErrorCampo from '../components/ErrorCampo.jsx';
 import { useRef, useState } from 'react';
 import IconoAccion from './IconoAccion.jsx';
 import ConfirmarBorrado from './ConfirmarBorrado.jsx';
@@ -18,6 +20,7 @@ function fotoValida(archivo) {
 }
 
 export default function ListaPlatos({ platos, setPlatos, categorias }) {
+  const { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario } = useErroresCampos();
   const { token } = useAuth();
   const campoNombre = useRef(null);
   const panel = useRef(null);
@@ -53,6 +56,7 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
       available: Boolean(seleccionado.available)
     });
     setError('');
+    limpiarErrores();
     setMensaje('');
     setAvisoBorrado(null);
     abrirPanel();
@@ -72,6 +76,7 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
     setIdEnEdicion(null);
     setPlato(platoInicial);
     setError('');
+    limpiarErrores();
     setMensaje('');
   }
 
@@ -79,26 +84,49 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
   async function guardarPlato(event) {
     event.preventDefault();
     setError('');
+    limpiarErrores();
     setMensaje('');
 
     const name = plato.name.trim();
     const description = plato.description.trim();
     const categoria = categorias.find((actual) => actual._id === plato.category);
-    if (!name || !description || !categoria) {
-      setError('Completá el nombre, la descripción y la categoría.');
+    const price = Number(plato.price);
+    if (!name) {
+      setErrorCampo('nombre-nuevo-plato', 'Ingresá el nombre del plato.');
+      return;
+    }
+    if (name.length < 3 || name.length > 100) {
+      setErrorCampo('nombre-nuevo-plato', 'El nombre del plato debe tener entre 3 y 100 caracteres.');
+      return;
+    }
+    if (!description) {
+      setErrorCampo('descripcion-nuevo-plato', 'Ingresá la descripción del plato.');
+      return;
+    }
+    if (description.length < 10 || description.length > 500) {
+      setErrorCampo('descripcion-nuevo-plato', 'La descripción del plato debe tener entre 10 y 500 caracteres.');
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0.01) {
+      setErrorCampo('precio-nuevo-plato', 'El precio del plato debe ser un número mayor o igual a 0,01.');
+      return;
+    }
+    if (!categoria) {
+      setErrorCampo('categoria-nuevo-plato', 'Elegí una categoría para el plato.');
       return;
     }
     const archivo = formularioFoto.current?.elements.foto.files[0];
-    if (!idEnEdicion && archivo && !fotoValida(archivo)) {
-      setError(errorFormatoFoto);
+    if (archivo && !fotoValida(archivo)) {
+      setErrorCampo('foto-plato', errorFormatoFoto);
       return;
     }
 
     setGuardando(true);
     try {
       const datos = {
-        ...plato, name, description, price: Number(plato.price)
+        ...plato, name, description, price
       };
+      let idGuardado = idEnEdicion;
       if (idEnEdicion) {
         const actualizado = await editarPlato(token, idEnEdicion, datos);
         setPlatos((actuales) => actuales.map((actual) =>
@@ -106,18 +134,19 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
         ));
       } else {
         const creado = await crearPlato(token, datos);
+        idGuardado = creado._id;
         setPlatos((actuales) => [...actuales, { ...creado, category: categoria }]);
-        if (archivo) {
-          try {
-            const { image } = await subirFotoPlato(token, creado._id, archivo);
-            setPlatos((actuales) => actuales.map((actual) =>
-              actual._id === creado._id ? { ...actual, image } : actual
-            ));
-          } catch (error) {
-            setIdEnEdicion(creado._id);
-            setError(`El plato se creó, pero no se pudo subir la foto. ${error.message}`);
-            return;
-          }
+      }
+      if (archivo) {
+        try {
+          const { image } = await subirFotoPlato(token, idGuardado, archivo);
+          setPlatos((actuales) => actuales.map((actual) =>
+            actual._id === idGuardado ? { ...actual, image } : actual
+          ));
+        } catch (error) {
+          if (!idEnEdicion) setIdEnEdicion(idGuardado);
+          setError(`Los datos del plato se guardaron, pero la foto no se pudo subir. ${error.message}`);
+          return;
         }
       }
       panel.current.close();
@@ -133,6 +162,7 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
   // Confirma el borrado y quita el plato del listado.
   async function eliminarPlato(seleccionado) {
     setError('');
+    limpiarErrores();
     setMensaje('');
     setAvisoBorrado(null);
     setIdBorrando(seleccionado._id);
@@ -157,9 +187,10 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
     if (!archivo || !idEnEdicion) return;
 
     setError('');
+    limpiarErrores();
     setMensajeFoto('');
     if (!fotoValida(archivo)) {
-      setError(errorFormatoFoto);
+      setErrorCampo('foto-plato', errorFormatoFoto);
       return;
     }
 
@@ -206,31 +237,35 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
             </button>
           </>
         }>
-        <form id="form-datos-plato" onSubmit={guardarPlato}>
+        <form {...eventosFormulario} id="form-datos-plato" onSubmit={guardarPlato}>
           <fieldset disabled={ocupado}>
             <p>
               <label htmlFor="nombre-nuevo-plato">Nombre</label>{' '}
-              <input id="nombre-nuevo-plato" ref={campoNombre} name="name" value={plato.name} onChange={handleChange} required />
+              <input id="nombre-nuevo-plato" {...atributosCampo('nombre-nuevo-plato')} ref={campoNombre} name="name" value={plato.name} onChange={handleChange} required />
+            <ErrorCampo id="nombre-nuevo-plato" mensaje={errores['nombre-nuevo-plato']} />
             </p>
             <p>
               <label htmlFor="descripcion-nuevo-plato">Descripción</label>{' '}
-              <textarea id="descripcion-nuevo-plato" name="description"
+              <textarea id="descripcion-nuevo-plato" {...atributosCampo('descripcion-nuevo-plato')} name="description"
                 value={plato.description} onChange={handleChange} required />
+            <ErrorCampo id="descripcion-nuevo-plato" mensaje={errores['descripcion-nuevo-plato']} />
             </p>
             <p>
               <label htmlFor="precio-nuevo-plato">Precio</label>{' '}
-              <input id="precio-nuevo-plato" name="price" type="number" min="0.01" step="any"
+              <input id="precio-nuevo-plato" {...atributosCampo('precio-nuevo-plato')} name="price" type="number" min="0.01" step="any"
                 value={plato.price} onChange={handleChange} required />
+            <ErrorCampo id="precio-nuevo-plato" mensaje={errores['precio-nuevo-plato']} />
             </p>
             <p>
               <label htmlFor="categoria-nuevo-plato">Categoría</label>{' '}
-              <select id="categoria-nuevo-plato" name="category"
+              <select id="categoria-nuevo-plato" {...atributosCampo('categoria-nuevo-plato')} name="category"
                 value={plato.category} onChange={handleChange} required>
                 <option value="">Elegí una categoría</option>
                 {categorias.map((categoria) => (
                   <option key={categoria._id} value={categoria._id}>{categoria.name}</option>
                 ))}
               </select>
+              <ErrorCampo id="categoria-nuevo-plato" mensaje={errores['categoria-nuevo-plato']} />
             </p>
             <div className="disponibilidad-plato">
               <label htmlFor="disponibilidad-plato">
@@ -241,16 +276,16 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
             </div>
           </fieldset>
         </form>
-          <form className="form-foto-plato" ref={formularioFoto} onSubmit={guardarFoto}>
+          <form {...eventosFormulario} className="form-foto-plato" ref={formularioFoto} onSubmit={guardarFoto}>
             <fieldset disabled={ocupado}>
               <legend>Foto del plato (opcional)</legend>
               <div className="foto-plato-controles">
                 {fotoActual && <img className="miniatura-plato" src={fotoActual} alt="Foto actual del plato" />}
                 <div className="admin-file-picker selector-foto-plato">
-                <input id="foto-plato" name="foto" type="file" accept="image/jpeg,image/png,image/webp"
-                  aria-describedby="ayuda-foto-plato" required
+                <input id="foto-plato" {...atributosCampo('foto-plato', 'ayuda-foto-plato')} name="foto" type="file" accept="image/jpeg,image/png,image/webp" required
                   onChange={(event) => setNombreFoto(event.target.files[0]?.name || '')} />
                 <label className="admin-file-label" htmlFor="foto-plato">Elegir foto</label>
+            <ErrorCampo id="foto-plato" mensaje={errores['foto-plato']} />
                   {nombreFoto && <span className="admin-file-name">{nombreFoto}</span>}
                   <p id="ayuda-foto-plato">JPEG, PNG o WebP · Hasta 2 MiB</p>
                 </div>

@@ -4,6 +4,7 @@
 @import './Auth.css';
 @import './Perfil.css';
 @import './Admin.css';
+@import './SitioPublico.css';
 
 /* Estilos generales del sitio. */
 :root {
@@ -64,4 +65,45 @@ h1 {
 .container {
     width: min(1184px, calc(100% - 3rem));
     margin-inline: auto;
+}
+
+/* Mensajes de validación junto a los inputs. */
+.field-error { display: block; margin-top: .4rem; color: #922c18; font-size: .825rem; line-height: 1.45; font-weight: 600; }
+input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"] { border-color: #922c18; }
+
+/* Elevación compartida de superficies y paneles. */
+:root {
+    --shadow-card: 0 2px 5px rgb(44 27 21 / 4%), 0 10px 26px -10px rgb(44 27 21 / 16%);
+    --shadow-featured: 0 6px 14px -6px rgb(44 27 21 / 14%), 0 20px 42px -18px rgb(44 27 21 / 25%);
+    --shadow-dialog: 0 12px 44px rgb(20 14 10 / 22%);
+}
+
+.auth-card,
+.perfil-card,
+.secciones-admin > section,
+.plato,
+.valores article,
+.datos-contacto {
+    box-shadow: var(--shadow-card);
+}
+
+.foto-hero,
+.historia > img,
+.contacto-datos > img {
+    box-shadow: var(--shadow-featured);
+}
+
+.panel-lateral,
+.confirmar-borrado {
+    box-shadow: var(--shadow-dialog);
+}
+
+.header {
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 3px 12px rgb(20 14 10 / 14%);
+}
+
+.footer {
+    box-shadow: 0 -5px 18px rgb(20 14 10 / 9%);
 }

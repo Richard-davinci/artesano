@@ -1,3 +1,4 @@
+import { Inicio, Nosotros, Contacto } from './pages/SitioPublico.jsx';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import RutaPrivada from './components/RutaPrivada.jsx';
 import RutaPorRol from './components/RutaPorRol.jsx';
@@ -13,7 +14,10 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<NuestraCarta />} />
+          <Route path="/" element={<Inicio />} />
+          <Route path="/carta" element={<NuestraCarta />} />
+          <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/contacto" element={<Contacto />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route element={<RutaPrivada />}>
@@ -24,7 +28,7 @@ export default function App() {
             <Route path="/acceso-denegado" element={
               <main className="menu">
                 <h1>Acceso denegado</h1>
-                <Link to="/">Volver al menú</Link>
+                <Link to="/carta">Volver a la carta</Link>
               </main>
             } />
           </Route>

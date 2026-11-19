@@ -1,5 +1,14 @@
 export const apiUrl = (import.meta.env.VITE_API_URL?.trim() || 'http://localhost:3001').replace(/\/+$/, '');
 
+async function solicitar(url, options) {
+  try {
+    return await fetch(url, options);
+  } catch (error) {
+    if (error.name === 'AbortError') throw error;
+    throw new Error('No se pudo conectar con el servidor. Intentá nuevamente.');
+  }
+}
+
 export async function obtenerPlatos(signal, filtros = {}) {
   const parametros = [];
   if (filtros.name) parametros.push(`name=${encodeURIComponent(filtros.name)}`);
@@ -8,7 +17,7 @@ export async function obtenerPlatos(signal, filtros = {}) {
   if (filtros.maxPrice) parametros.push(`maxPrice=${encodeURIComponent(filtros.maxPrice)}`);
   const consulta = parametros.length ? `?${parametros.join('&')}` : '';
 
-  const respuesta = await fetch(`${apiUrl}/api/dishes${consulta}`, { signal });
+  const respuesta = await solicitar(`${apiUrl}/api/dishes${consulta}`, { signal });
   if (!respuesta.ok) {
     const datos = await respuesta.json().catch(() => null);
     throw new Error(datos?.message || 'No se pudieron obtener los platos.');
@@ -20,7 +29,7 @@ export async function obtenerPlatos(signal, filtros = {}) {
 }
 
 export async function obtenerCategorias(signal) {
-  const respuesta = await fetch(`${apiUrl}/api/categories`, { signal });
+  const respuesta = await solicitar(`${apiUrl}/api/categories`, { signal });
   if (!respuesta.ok) throw new Error('No pudimos cargar las categorías.');
 
   const { data } = await respuesta.json();
@@ -28,21 +37,24 @@ export async function obtenerCategorias(signal) {
 }
 
 export async function iniciarSesion(email, password) {
-  const respuesta = await fetch(`${apiUrl}/api/auth/login`, {
+  const respuesta = await solicitar(`${apiUrl}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
   });
 
   if (!respuesta.ok) {
-    throw new Error('No se pudo iniciar sesión.');
+    const datos = await respuesta.json().catch(() => null);
+    throw new Error(respuesta.status === 401
+      ? 'El correo o la contraseña son incorrectos.'
+      : datos?.message || 'No se pudo iniciar sesión.');
   }
   return respuesta.json();
 }
 
 // Envía los datos necesarios para crear una cuenta.
 export async function registrarUsuario(name, email, password) {
-  const respuesta = await fetch(`${apiUrl}/api/auth/register`, {
+  const respuesta = await solicitar(`${apiUrl}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password })
@@ -55,7 +67,7 @@ export async function registrarUsuario(name, email, password) {
 
 // Envía el token en las solicitudes privadas.
 async function fetchPrivado(endpoint, token, options = {}) {
-  const respuesta = await fetch(`${apiUrl}${endpoint}`, {
+  const respuesta = await solicitar(`${apiUrl}${endpoint}`, {
     ...options,
     headers: { ...options.headers, Authorization: `Bearer ${token}` }
   });

@@ -4,7 +4,10 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 // Enlaces compartidos por el header y el footer.
 const enlaces = [
-  ['/', 'Nuestra carta']
+  ['/', 'Inicio'],
+  ['/carta', 'Nuestra carta'],
+  ['/nosotros', 'Nosotros'],
+  ['/contacto', 'Contacto']
 ];
 
 function Navegacion() {
