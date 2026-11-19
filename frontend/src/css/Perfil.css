@@ -119,3 +119,34 @@
 @media (max-width: 640px) {
     .perfil-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Edición del nombre de la cuenta. */
+.perfil-name-form {
+    display: grid;
+    justify-items: start;
+    gap: .75rem;
+    margin-top: .5rem;
+}
+
+.perfil-name-form input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: .6rem .85rem;
+    border: 1px solid #b9ada6;
+    border-radius: .5rem;
+    background: #fffdf8;
+    color: inherit;
+    font: inherit;
+    font-weight: 400;
+}
+
+.perfil-name-form input:focus-visible {
+    outline: 2px solid #a94020;
+    outline-offset: 3px;
+}
+
+.perfil-name-form input[aria-invalid="true"] { border-color: #922c18; }
+.perfil-name-form p { margin: 0; font-size: .875rem; }
+.perfil-name-form [role="alert"] { color: #922c18; }
+.perfil-name-form [role="status"] { color: #35644c; }

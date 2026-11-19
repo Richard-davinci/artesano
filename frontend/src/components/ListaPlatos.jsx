@@ -33,7 +33,6 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
   const [pendienteBorrado, setPendienteBorrado] = useState(null);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
-  const [mensajeFoto, setMensajeFoto] = useState('');
   const [avisoBorrado, setAvisoBorrado] = useState(null);
   const ocupado = guardando || idBorrando !== null;
   const platoEnEdicion = platos.find((actual) => actual._id === idEnEdicion);
@@ -63,9 +62,9 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
   }
 
   function abrirPanel() {
-    formularioFoto.current?.reset();
+    const inputFoto = formularioFoto.current?.querySelector('input[type="file"]');
+    if (inputFoto) inputFoto.value = '';
     setNombreFoto('');
-    setMensajeFoto('');
     panel.current.showModal();
     campoNombre.current.focus();
   }
@@ -115,7 +114,7 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
       setErrorCampo('categoria-nuevo-plato', 'Elegí una categoría para el plato.');
       return;
     }
-    const archivo = formularioFoto.current?.elements.foto.files[0];
+    const archivo = formularioFoto.current?.querySelector('input[type="file"]')?.files[0];
     if (archivo && !fotoValida(archivo)) {
       setErrorCampo('foto-plato', errorFormatoFoto);
       return;
@@ -179,35 +178,22 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
     }
   }
 
-  // Actualiza la foto sin modificar los otros datos del plato.
-  async function guardarFoto(event) {
-    event.preventDefault();
-    const formulario = event.currentTarget;
-    const archivo = formulario.elements.foto.files[0];
-    if (!archivo || !idEnEdicion) return;
+  // Valida la foto al elegirla y muestra el error junto al selector.
+  function seleccionarFoto(event) {
+    const archivo = event.target.files[0];
+    setNombreFoto('');
+    setErrorCampo('foto-plato', '');
+    if (!archivo) return;
 
-    setError('');
-    limpiarErrores();
-    setMensajeFoto('');
     if (!fotoValida(archivo)) {
-      setErrorCampo('foto-plato', errorFormatoFoto);
+      event.target.value = '';
+      setErrorCampo('foto-plato', archivo.size > 2 * 1024 * 1024
+        ? 'La foto del plato no puede superar los 2 MiB.'
+        : 'Elegí una foto JPEG, PNG o WebP.');
       return;
     }
 
-    setGuardando(true);
-    try {
-      const { image } = await subirFotoPlato(token, idEnEdicion, archivo);
-      setPlatos((actuales) => actuales.map((actual) =>
-        actual._id === idEnEdicion ? { ...actual, image } : actual
-      ));
-      formulario.reset();
-      setNombreFoto('');
-      setMensajeFoto('Foto del plato actualizada.');
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setGuardando(false);
-    }
+    setNombreFoto(archivo.name);
   }
 
   return (
@@ -276,26 +262,29 @@ export default function ListaPlatos({ platos, setPlatos, categorias }) {
             </div>
           </fieldset>
         </form>
-          <form {...eventosFormulario} className="form-foto-plato" ref={formularioFoto} onSubmit={guardarFoto}>
+          <div {...eventosFormulario} className="form-foto-plato" ref={formularioFoto}>
             <fieldset disabled={ocupado}>
               <legend>Foto del plato (opcional)</legend>
               <div className="foto-plato-controles">
                 {fotoActual && <img className="miniatura-plato" src={fotoActual} alt="Foto actual del plato" />}
                 <div className="admin-file-picker selector-foto-plato">
                 <input id="foto-plato" {...atributosCampo('foto-plato', 'ayuda-foto-plato')} name="foto" type="file" accept="image/jpeg,image/png,image/webp" required
-                  onChange={(event) => setNombreFoto(event.target.files[0]?.name || '')} />
+                  onChange={seleccionarFoto} />
                 <label className="admin-file-label" htmlFor="foto-plato">Elegir foto</label>
-            <ErrorCampo id="foto-plato" mensaje={errores['foto-plato']} />
                   {nombreFoto && <span className="admin-file-name">{nombreFoto}</span>}
                   <p id="ayuda-foto-plato">JPEG, PNG o WebP · Hasta 2 MiB</p>
                 </div>
               </div>
-              {idEnEdicion && nombreFoto && <button className="boton-foto-secundario" type="submit">
-                {fotoActual ? 'Reemplazar foto' : 'Subir foto'}
-              </button>}
+              <ErrorCampo id="foto-plato" mensaje={errores['foto-plato']} />
+              {nombreFoto && (
+                <p className="foto-pendiente" role="status">
+                  {idEnEdicion
+                    ? 'Foto seleccionada. Se guardará al pulsar Guardar cambios.'
+                    : 'Foto seleccionada. Se guardará al crear el plato.'}
+                </p>
+              )}
             </fieldset>
-          </form>
-        {mensajeFoto && <p role="status">{mensajeFoto}</p>}
+          </div>
         {error && <p role="alert">{error}</p>}
       </PanelLateral>
       {mensaje && <p role="status">{mensaje}</p>}

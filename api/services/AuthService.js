@@ -34,6 +34,12 @@ export function buscarPerfil(id) {
   return User.findById(id).select('name email profileImage');
 }
 
+// Actualiza el nombre de la cuenta autenticada.
+export function actualizarNombre(id, name) {
+  return User.findByIdAndUpdate(id, { name }, { new: true, runValidators: true })
+    .select('name email profileImage');
+}
+
 // Guarda la foto nueva y elimina la anterior.
 export async function guardarFotoPerfil(id, bytes, extension) {
   const filename = `${randomUUID()}.${extension}`;

@@ -1,7 +1,26 @@
 import { profileImageExtension } from '../middlewares/profileImageUpload.js';
-import { buscarPerfil, guardarFotoPerfil, iniciarSesion, registrarUsuario } from '../services/AuthService.js';
+import { actualizarNombre, buscarPerfil, guardarFotoPerfil, iniciarSesion, registrarUsuario } from '../services/AuthService.js';
 
 class AuthController {
+  // Guarda el nombre del usuario autenticado.
+  async updateMe(req, res, next) {
+    const { name } = req.body ?? {};
+    if (typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ message: 'Ingresá tu nombre' });
+    }
+
+    try {
+      const user = await actualizarNombre(req.user._id, name.trim());
+      if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+      return res.json({
+        message: 'Nombre actualizado',
+        data: { _id: user._id, name: user.name, email: user.email, profileImage: user.profileImage ?? null }
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   // Registra un usuario.
   async register(req, res, next) {
     try {
@@ -37,7 +56,7 @@ class AuthController {
       const specialCharacter = /[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]/;
       if (!allowedCharacters.test(password) || /[^\S ]/u.test(password) || /[\u20E3\uFE0E\uFE0F]/u.test(password)) {
         return res.status(400).json({
-          message: passwordRequirements
+          message: 'La contraseña contiene caracteres no admitidos. Usá letras, números, espacios y signos comunes'
         });
       }
 
@@ -47,6 +66,7 @@ class AuthController {
           message: passwordRequirements
         });
       }
+
 
       const user = await registrarUsuario({ name, email: normalizedEmail, password });
       if (!user) {

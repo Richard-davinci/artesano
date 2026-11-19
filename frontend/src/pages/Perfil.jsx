@@ -2,7 +2,7 @@ import useErroresCampos from '../components/useErroresCampos.js';
 import ErrorCampo from '../components/ErrorCampo.jsx';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { apiUrl, obtenerPerfil, subirFotoPerfil } from '../services/api.js';
+import { actualizarNombrePerfil, apiUrl, obtenerPerfil, subirFotoPerfil } from '../services/api.js';
 
 export default function Perfil() {
   const { errores, setErrorCampo, limpiarErrores, atributosCampo, eventosFormulario } = useErroresCampos();
@@ -14,6 +14,10 @@ export default function Perfil() {
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [nombreEditado, setNombreEditado] = useState('');
+  const [guardandoNombre, setGuardandoNombre] = useState(false);
+  const [errorNombre, setErrorNombre] = useState('');
+  const [mensajeNombre, setMensajeNombre] = useState('');
 
   useEffect(() => {
     let activo = true;
@@ -21,7 +25,10 @@ export default function Perfil() {
     async function cargarPerfil() {
       try {
         const datos = await obtenerPerfil(token);
-        if (activo) setPerfil(datos);
+        if (activo) {
+          setPerfil(datos);
+          setNombreEditado(datos.name);
+        }
       } catch (error) {
         if (activo) setError(error.message);
       } finally {
@@ -43,6 +50,28 @@ export default function Perfil() {
 
   const nombre = perfil?.name || user.name || 'Usuario';
   const iniciales = nombre.trim().split(/\s+/).slice(0, 2).map((parte) => parte[0]).join('').toUpperCase();
+
+  // Guarda el nombre y actualiza los datos visibles.
+  async function guardarNombre(event) {
+    event.preventDefault();
+    setErrorNombre('');
+    setMensajeNombre('');
+    if (!nombreEditado.trim()) {
+      setErrorCampo('perfil-name', 'Ingresá tu nombre.');
+      return;
+    }
+    setGuardandoNombre(true);
+    try {
+      const actualizado = await actualizarNombrePerfil(token, nombreEditado.trim());
+      setPerfil(actualizado);
+      setNombreEditado(actualizado.name);
+      setMensajeNombre('Nombre actualizado.');
+    } catch (error) {
+      setErrorNombre(error.message);
+    } finally {
+      setGuardandoNombre(false);
+    }
+  }
 
   // Valida y muestra una vista previa de la foto elegida.
   function seleccionarImagen(evento) {
@@ -110,7 +139,7 @@ export default function Perfil() {
           {perfil && (
             <form {...eventosFormulario} onSubmit={guardarImagen}>
               <div className="perfil-selector">
-                <input id="profileImage" {...atributosCampo('profileImage', 'ayuda-foto archivo-foto')} type="file" accept="image/jpeg,image/png,image/webp" onChange={seleccionarImagen} disabled={subiendo} />
+                <input id="profileImage" {...atributosCampo('profileImage', 'ayuda-foto archivo-foto')} type="file" accept="image/jpeg,image/png,image/webp" onChange={seleccionarImagen} disabled={subiendo || guardandoNombre} />
                 <label className="perfil-upload-label" htmlFor="profileImage">
                   {archivo ? 'Elegir otra foto' : 'Elegir foto'}
                 </label>
@@ -119,7 +148,7 @@ export default function Perfil() {
               <p id="ayuda-foto" className="perfil-ayuda">JPEG, PNG o WebP · Hasta 2 MiB</p>
               <p id="archivo-foto" className="perfil-archivo" hidden={!archivo}>{archivo?.name}</p>
               {archivo && (
-                <button type="submit" disabled={subiendo}>
+                <button type="submit" disabled={subiendo || guardandoNombre}>
                   {subiendo ? 'Guardando...' : 'Guardar foto'}
                 </button>
               )}
@@ -132,7 +161,28 @@ export default function Perfil() {
           <h2 id="titulo-cuenta">Datos de la cuenta</h2>
           {cargando && <p className="perfil-ayuda" role="status">Cargando perfil...</p>}
           <dl className="perfil-datos">
-            <div><dt>Nombre</dt><dd>{nombre}</dd></div>
+            <div>
+              <dt><label htmlFor="perfil-name">Nombre</label></dt>
+              <dd>
+                {perfil ? (
+                  <form className="perfil-name-form" {...eventosFormulario} onSubmit={guardarNombre}>
+                    <input id="perfil-name" {...atributosCampo('perfil-name')} name="name" autoComplete="name"
+                      value={nombreEditado} disabled={guardandoNombre || subiendo} required
+                      onChange={(event) => {
+                        setNombreEditado(event.target.value);
+                        setMensajeNombre('');
+                        setErrorNombre('');
+                      }} />
+                    <ErrorCampo id="perfil-name" mensaje={errores['perfil-name']} />
+                    <button type="submit" disabled={guardandoNombre || subiendo || nombreEditado.trim() === perfil.name}>
+                      {guardandoNombre ? 'Guardando...' : 'Guardar nombre'}
+                    </button>
+                    {errorNombre && <p role="alert">{errorNombre}</p>}
+                    {mensajeNombre && <p role="status">{mensajeNombre}</p>}
+                  </form>
+                ) : nombre}
+              </dd>
+            </div>
             {perfil && <div><dt>Correo electrónico</dt><dd>{perfil.email}</dd></div>}
             <div><dt>Rol</dt><dd><span className="perfil-rol">{user.role === 'admin' ? 'Administrador' : 'Usuario'}</span></dd></div>
           </dl>

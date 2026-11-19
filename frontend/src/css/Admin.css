@@ -198,3 +198,36 @@
     .tabla-admin :is(th, td) { padding-inline: .5rem; }
     .tabla-admin .detalle-compacto { display: block; margin-top: .25rem; color: #565656; font-size: .8rem; }
 }
+
+
+/* Foto del plato con ayuda y errores en filas separadas. */
+.form-foto-plato .foto-plato-controles {
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.form-foto-plato .selector-foto-plato {
+    flex: 1;
+    gap: .5rem;
+}
+
+.form-foto-plato .miniatura-plato {
+    width: 5.5rem;
+    height: 5.5rem;
+}
+
+.form-foto-plato .admin-file-name {
+    line-height: 1.5;
+    font-size: .825rem;
+}
+
+.form-foto-plato .field-error {
+    margin-top: .85rem;
+}
+
+@media (max-width: 380px) {
+    .form-foto-plato .foto-plato-controles { flex-wrap: wrap; }
+    .form-foto-plato .selector-foto-plato { flex-basis: 100%; }
+}
+
+.form-foto-plato .foto-pendiente { margin: .85rem 0 0; color: #565656; font-size: .825rem; line-height: 1.5; }

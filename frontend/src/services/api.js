@@ -82,6 +82,15 @@ export function obtenerPerfil(token) {
   return fetchPrivado('/api/auth/me', token);
 }
 
+// Guarda el nombre de la cuenta actual.
+export function actualizarNombrePerfil(token, name) {
+  return fetchPrivado('/api/auth/me', token, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+}
+
 export function crearCategoria(token, categoria) {
   return fetchPrivado('/api/categories', token, {
     method: 'POST',
