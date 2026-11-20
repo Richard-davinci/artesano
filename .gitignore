@@ -1,4 +1,12 @@
 node_modules/
 .env
 atlas-credentials.env
-uploads/
+/api/uploads/**
+!/api/uploads/dishes/
+!/api/uploads/profiles/
+!/api/uploads/dishes/*.jpg
+!/api/uploads/dishes/*.png
+!/api/uploads/dishes/*.webp
+!/api/uploads/profiles/*.jpg
+!/api/uploads/profiles/*.png
+!/api/uploads/profiles/*.webp
